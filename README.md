@@ -1,107 +1,151 @@
 <div align="center">
 
-# 🏗️ scaffold
+# 🧰 gitignore-sync
 
-**The kirchDev baseline — everything a new repo should ship with on day one, nothing more**
+**Keeps your `.gitignore` maintained, not generated — curated blocks in a region the tool owns, everything else untouched**
+
+[![npm Version](https://img.shields.io/npm/v/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/gitignore-sync)
+[![Downloads](https://img.shields.io/npm/dm/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/gitignore-sync)
+[![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/gitignore-sync/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/kirchDev/gitignore-sync/actions/workflows/ci.yml)
+[![Node Version](https://img.shields.io/node/v/gitignore-sync.svg?style=flat-square&color=8993be)](https://www.npmjs.com/package/gitignore-sync)
+[![License: MIT](https://img.shields.io/npm/l/gitignore-sync.svg?style=flat-square&color=10b981)](LICENSE)
 
 </div>
 
 ---
 
 ```bash
-gh repo create my-new-repo --template TitusKirch/scaffold
+npx gitignore-sync init     # fingerprint the repo, confirm, write the region
+npx gitignore-sync sync     # re-render it, any time, as often as you like
 ```
 
-That's it. Click **Use this template** (or use `gh`), edit a handful of placeholders, and the meta layer — lint, format, commit hooks, CI, CodeQL, Dependabot, release-please — is already wired up.
+That's it. The blocks the tool owns stay current; every line you wrote yourself survives verbatim.
 
-## ✨ What's in the box
+## 🤔 Why
 
-- **🟢 Node + pnpm pinned** — `.nvmrc` (Node 24), `pnpm-workspace.yaml` (pnpm 11 with sane defaults), `package.json` with `packageManager`.
-- **🧹 Lint & format via oxc** — `.oxlintrc.json`, `.oxfmtrc.json`, single `pnpm check` gate.
-- **🔷 TypeScript, no build step** — meta scripts and tool configs are `.ts`, run straight off Node 24's native type stripping; `tsconfig.json` + `pnpm typecheck`.
-- **🪝 Commit hooks** — Husky + `lint-staged` + `commitlint` enforcing Conventional Commits.
-- **🤖 Dependency PRs** — Dependabot (npm weekly, actions monthly) + `taze.config.ts` for interactive upgrades.
-- **🔁 release-please** — full workflow + config + manifest so the new repo can publish from its first commit.
-- **🛡️ GitHub workflows** — `ci.yml` (lint + format + typecheck + policy parity on PR), `codeql.yml` (push/PR + weekly).
-- **📋 Issue / PR templates** — bug report, feature request, question (`.yml` forms) + PR checklist.
-- **📄 Standard meta** — `LICENSE`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `SECURITY.md`.
-- **🤖 Agent-ready** — `CLAUDE.md` + `AGENTS.md` (kept in sync), `.tituskirch-skills.json`, baseline `.claude/settings.json` permissions, `pnpm skills:update` wiring.
+`gitignore.io`, `gig` and `ignr` all _fetch and dump_: you pull a template once, paste it, and drift from there. None of them re-syncs, so a `.gitignore` grows into a few hundred lines of ballast nobody dares touch.
 
-The actual project code can be anything — PHP, Go, Rust, Vue, plain shell. `scaffold` only owns the meta layer that sits on top.
+`gitignore-sync` keeps a **managed region** inside the file and re-renders it on demand. The rest of the file is a free zone the tool never writes to — which is what makes running it a second time safe, and a hundredth time boring.
 
-## 🚀 Setup
-
-After clicking **Use this template**:
-
-1. Clone your new repo.
-2. Replace the placeholders listed in [Customising the template](#-customising-the-template).
-3. Reset release-please as described in [Resetting release-please](#-resetting-release-please) (only if you want to start at `v0.0.0`).
-4. `pnpm install` — Husky activates the hooks via the `prepare` script.
-5. Add your project code and ship the first commit:
-
-   ```bash
-   git commit -m "chore: initial commit from scaffold"
-   ```
-
-## 🤖 AI & skills
-
-Every repo from this template is agent-ready on day one:
-
-- **`CLAUDE.md` + `AGENTS.md`** — one set of guidance for Claude Code and vendor-neutral agent tools (Codex, OpenCode, Cursor, Copilot). Kept **byte-identical** — edit one, edit the other.
-- **`.claude/settings.json`** — baseline permissions: read-only git and the `pnpm` scripts are allowed; destructive git (`push`, `reset --hard`, `clean -f`, …) is denied.
-- **`.tituskirch-skills.json`** — configures the [TitusKirch skills](https://github.com/TitusKirch/skills) (commit, PR, issue, release, docs) per repo.
-
-Install the skill bundle, then keep project-scoped skills fresh:
+## 📦 Installation
 
 ```bash
-pnpm dlx skills add TitusKirch/skills   # add the bundle — npx / yarn dlx / bunx work too
-pnpm skills:update                       # refresh project-scoped skills
+pnpm add -g gitignore-sync   # npm i -g / yarn global add / bun add -g all work
 ```
 
-## 🧰 Customising the template
+Or run it without installing: `npx gitignore-sync <command>`. The binary is also available as `gis`.
 
-Every file below references `TitusKirch/scaffold`, the maintainer's name, or the maintainer's email. Search-and-replace these to your repo's identity before the first push.
+## 🚀 Quick start
 
-| File                                  | Replace                                                                          |
-| :------------------------------------ | :------------------------------------------------------------------------------- |
-| `package.json`                        | `name`, `description`, `homepage`, `bugs.url`, `repository.url`, `author`        |
-| `README.md`                           | Project title, tagline, hook snippet, every `TitusKirch/scaffold` link           |
-| `LICENSE`                             | Copyright year + holder                                                          |
-| `CODE_OF_CONDUCT.md`                  | Enforcement contact email                                                        |
-| `CONTRIBUTING.md`                     | Every `TitusKirch/scaffold` link, the development setup section                  |
-| `SECURITY.md`                         | Advisory URL, contact email, scope wording                                       |
-| `.github/ISSUE_TEMPLATE/*.yml`        | Generic as shipped. `config.yml` links questions/ideas/possible-bugs to the Discord forum — private repos without a forum drop that block; optionally add stack-specific version fields to `bug_report.yml` |
-| `.github/pull_request_template.md`    | Example commit message in the title hint                                         |
-| `release-please-config.json`          | `packages["."]["package-name"]`                                                  |
-| `CLAUDE.md` + `AGENTS.md`             | **Delete both** and regenerate with `/init` in Claude Code — scaffold-specific, keep byte-identical |
+```bash
+gitignore-sync init             # detect, confirm in a prompt, write the region
+gitignore-sync edit             # tick stacks on and off later
+gitignore-sync add nuxt tauri   # or name them — for scripts and CI
+gitignore-sync remove intellij  # drop one; your own lines are kept
+gitignore-sync sync             # re-render from the header
+gitignore-sync check            # CI gate: non-zero on drift
+gitignore-sync list             # what this binary ships, and what you declare
+```
+
+Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positional elsewhere), and every writing command takes `--dry-run`.
 
 > [!TIP]
-> A quick `grep -rn "TitusKirch/scaffold" .` catches every reference in one sweep.
+> `init` shows everything it found — your editor and platform included — and asks once:
+>
+> ```
+> ℹ Found 8 stacks: core, git, node, nuxt, tauri, dotenv, vscode, linux
+> ? Use them? › Yes / No
+> ```
+>
+> In CI it asks nothing — `--yes` or no terminal takes the committed fingerprints alone, says what it skipped, and writes. Your platform must not end up in a committed header because a pipeline ran.
+
+## ✨ Features
+
+- **🔁 Re-syncs, never re-dumps** — `sync` is idempotent, so it belongs in a habit, a hook or a cron, not in a one-off ritual.
+- **🛡️ Your lines are never lost** — a hand-written line found inside a managed block is *moved* to the free zone, not deleted. That rule is what makes the second run safe.
+- **🔍 Dedup that knows git** — exact duplicates go; `.idea`, `.idea/`, `/.idea` and `.idea/*` are four different patterns to git, so they are **reported**, never silently merged.
+- **🧹 Orphaned headings swept** — when a managed block absorbs every pattern under a `# Comment`, the heading goes with them. A block that was only ever a note stays.
+- **⚠️ Catches the mistake that breaks `!`** — a stray `.vscode` beside a `!.vscode/extensions.json` block silently disables it, because git never looks inside an ignored directory. That gets its own warning.
+- **🧭 No surprise rewrites** — `init` detects, `sync` does not. Adding a `package.json` never quietly rewrites your `.gitignore`; `sync --detect` proposes and stops there.
+- **🗂️ Folds in your editor** — the region uses `# region` / `# endregion`, so VSCode collapses a 40-line managed block to a single line, at both nesting levels.
+- **📋 A real CI gate** — `check` reports drift and duplicates and exits non-zero, so a stale block fails the build instead of rotting.
+
+## 🗂️ The shape
+
+```gitignore
+# region gitignore-sync
+# stacks: core, node, vscode, intellij
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# region node@v1
+node_modules
+dist
+coverage
+# endregion
+
+# endregion
+
+# ─── your rules, never touched ───
+frankenphp
+/bootstrap/ssr
+```
+
+Everything below the closing `# endregion` is the **free zone**: yours, preserved line for line.
+
+## 🧩 Stacks
+
+Twenty curated blocks, each derived from what the estate actually ignores rather than from a public template site.
+
+| Stack      | What it covers                       | Proposed by `init` when       |
+| :--------- | :----------------------------------- | :---------------------------- |
+| `core`     | `.DS_Store`, agent-local settings    | always                        |
+| `git`      | merge and backup droppings           | always (it is a git repo)     |
+| `node`     | modules, build output, logs, caches  | `package.json`                |
+| `dotenv`   | `.env*`, minus the committed example | `.env.example` or `.env`      |
+| `php`      | `/vendor`, PHPUnit caches            | `composer.json`               |
+| `laravel`  | build output, storage keys, SSR      | `artisan`                     |
+| `go`       | test and build droppings             | `go.mod`                      |
+| `tofu`     | state, tfvars, local overrides       | `*.tf` / `*.tofu`             |
+| `nuxt`     | `.nuxt`, `.output`, `.nitro`         | `nuxt.config.*`               |
+| `tauri`    | `src-tauri/target`, generated schemas| `src-tauri/`                  |
+| `rust`     | `/target`                            | a root `Cargo.toml`           |
+| `turborepo`| `.turbo`                             | `turbo.json`                  |
+| `playwright` | test-results, reports              | `playwright.config.*`         |
+| `storybook`| `storybook-static`                   | `.storybook/`                 |
+| `vscode`   | `.vscode/*` + the shared files       | you have a `.vscode/`         |
+| `intellij` | `.idea/*`                            | you have a `.idea/`           |
+| `vim`      | swap and session files               | your `$EDITOR` is vim         |
+| `macos`    | AppleDouble, Spotlight, Trashes      | you are on a Mac              |
+| `windows`  | Thumbs.db, desktop.ini, Recycle Bin  | you are on Windows            |
+| `linux`    | `*~`, trash and NFS droppings        | you are on Linux              |
+
+`gitignore-sync list` prints this for the binary you have installed, marking the ones your repo declares.
+
+## ⚙️ Configuration
+
+There is no config file. The configuration is the `# stacks:` line in the `.gitignore` itself — the header is **input**, the blocks below it are **output**.
+
+| Edit                              | Effect after `sync`                            |
+| :-------------------------------- | :--------------------------------------------- |
+| Add a name to `# stacks:`         | Its block is rendered into the region          |
+| Remove a name from `# stacks:`    | Its block disappears; your own lines are kept  |
+| Nothing                           | Nothing — `sync` is a no-op on a synced file   |
 
 > [!IMPORTANT]
-> **Private repo?** Two defaults are public-only. Delete `.github/workflows/codeql.yml` (CodeQL needs GitHub Advanced Security — free only on public repos), and swap the MIT `LICENSE` + README footer for a proprietary notice with `package.json` `"license": "UNLICENSED"`.
+> Nothing in a repository can tell you what the **other** contributors use — `.vscode/` and `.idea/` are themselves ignored. So those stacks are proposed from your own machine and written down once, rather than re-guessed on every run. Only repository fingerprints reach the non-interactive path; a CI runner's platform must not end up in a committed header.
 
-## 🔁 Resetting release-please
+## 🧪 Use in CI
 
-`scaffold` ships with an initial manifest pinned at `0.0.0`. For most cases you can leave it alone — release-please will simply propose a first release PR after your first conventional commit on `main`. If you want a truly clean slate:
+```yaml
+- run: npx gitignore-sync check
+```
 
-1. **Manifest** — make sure `.release-please-manifest.json` is `{ ".": "0.0.0" }` (the default).
-2. **Changelog** — delete `CHANGELOG.md` if your fresh repo somehow inherited one.
-3. **Config** — update `release-please-config.json` → `packages["."]["package-name"]` to your repo name.
-4. **Workflow permissions** — in **Settings → Actions → General → Workflow permissions**, enable **Read and write permissions** so release-please can open its PR.
-5. **Tags & releases (optional)** — if you copied the repo with history, drop old tags:
-
-   ```bash
-   git tag -l | xargs -r git tag -d
-   ```
-
-   …and clear any stale entries on the GitHub **Releases** tab.
-
-6. **First commit** — push a Conventional Commit on `main` (`feat: …`, `fix: …`). release-please opens the initial release PR; merge it and your first tagged release ships.
-
-## 💡 Why "scaffold" and not "template-\*"
-
-Single word, brandable, language-neutral. Future stack-specific templates can sit next to it as `scaffold-laravel`, `scaffold-nuxt`, etc.
+`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.
 
 ## 🤝 Contributing
 
