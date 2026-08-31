@@ -1,0 +1,21 @@
+# region gitignore-sync
+# stacks: core, vscode, intellij
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# region vscode@v1
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/mcp.json
+# endregion
+
+# region intellij@v1
+.idea/*
+# endregion
+
+# endregion
