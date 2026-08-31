@@ -46,3 +46,9 @@ jobs:
 
       - name: Agent policy parity
         run: pnpm check:policy
+
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
