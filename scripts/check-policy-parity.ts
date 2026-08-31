@@ -238,12 +238,16 @@ for (const entry of denies) {
   }
 
   const last = entry.tokens.length - 1;
-  const extending = prefixes.filter(
-    (prefix) =>
-      prefix.tokens.length > last &&
+  const head = entry.tokens[last];
+  const extending = prefixes.filter((prefix) => {
+    const candidate = prefix.tokens[last];
+    return (
+      head !== undefined &&
+      candidate !== undefined &&
       isTokenPrefix(entry.tokens.slice(0, last), prefix.tokens) &&
-      prefix.tokens[last].startsWith(entry.tokens[last])
-  );
+      candidate.startsWith(head)
+    );
+  });
 
   if (extending.length > 0) {
     structural.push({ entry, extending });
