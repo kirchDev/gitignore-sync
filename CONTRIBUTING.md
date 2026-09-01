@@ -46,12 +46,18 @@ the resolved binary path, the shipped stack count and the state of the
 `.gitignore` in the current directory. `--json` for scripts.
 
 Re-running `pnpm build` after a code change updates the binary in place; no
-re-link needed. To undo: `pnpm unlink`.
+re-link needed. To undo: `pnpm unlink` — and check that `pnpm-workspace.yaml` is clean afterwards.
+
+> [!IMPORTANT]
+> `pnpm link --global .` writes an `overrides:` block into `pnpm-workspace.yaml`
+> — a **committed** file. Never commit it: it would make every clone try to link
+> a package that only exists on your machine. `pnpm unlink` removes it again;
+> check `git status` before committing after a link.
 
 > [!NOTE]
-> `pnpm link --global .` reinstalls `node_modules` from the lockfile. That is
-> pnpm switching install strategy for a globally registered package — existing
-> work is not lost.
+> The link also reinstalls `node_modules` from the lockfile. That is pnpm
+> switching install strategy for a globally registered package — existing work
+> is not lost.
 
 ## Running the suite
 
