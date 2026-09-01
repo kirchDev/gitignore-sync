@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.0](https://github.com/kirchDev/gitignore-sync/compare/v0.1.0...v0.2.0) (2026-09-01)
+
+
+### Features
+
+* **cli:** add --recursive to audit and check ([43cb624](https://github.com/kirchDev/gitignore-sync/commit/43cb6247ee6eb944fcc15d058021cd46cf19ad9a))
+* **discover:** classify and skip the .gitignore files a repo does not own ([866fe99](https://github.com/kirchDev/gitignore-sync/commit/866fe99854c7d1860b5620ba2656b49da8c84f97))
+
 ## 0.1.0 (2026-09-01)
 
 
