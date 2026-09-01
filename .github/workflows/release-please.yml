@@ -102,7 +102,7 @@ jobs:
     # `build-script` is left at its default: this repo's `build` writes the npm
     # artifact itself. coverage-report needs `build:npm` there only because its
     # `build` produces an Action bundle instead.
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@aa8e987671b566e3649899a923a8016322601156 # v0.1.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@f81bbe5fb5e8055b55a1ef5f861cc63a8e253622 # v0.1.3
     with:
       tag-name: ${{ needs.release-please.outputs.tag-name }}
 
@@ -122,6 +122,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@aa8e987671b566e3649899a923a8016322601156 # v0.1.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@f81bbe5fb5e8055b55a1ef5f861cc63a8e253622 # v0.1.3
     with:
       prerelease: true
