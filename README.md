@@ -102,11 +102,12 @@ Everything below the closing `# endregion` is the **free zone**: yours, preserve
 
 ## 🧩 Stacks
 
-Twenty curated blocks, each derived from what the estate actually ignores rather than from a public template site.
+Twenty-one curated blocks, each derived from what the estate actually ignores rather than from a public template site.
 
 | Stack      | What it covers                       | Proposed by `init` when       |
 | :--------- | :----------------------------------- | :---------------------------- |
-| `core`     | `.DS_Store`, agent-local settings    | always                        |
+| `core`     | `.DS_Store`                          | always                        |
+| `agents`   | agent working files, not their config| `.claude/`, `.codex/`, …      |
 | `git`      | merge and backup droppings           | always (it is a git repo)     |
 | `node`     | modules, build output, logs, caches  | `package.json`                |
 | `dotenv`   | `.env*`, minus the committed example | `.env.example` or `.env`      |

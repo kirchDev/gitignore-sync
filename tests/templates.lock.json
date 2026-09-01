@@ -1,5 +1,6 @@
 {
-  "core@v1": [".DS_Store", ".claude/settings.local.json"],
+  "core@v1": [".DS_Store"],
+  "agents@v1": [".claude/settings.local.json", ".claude/worktrees/"],
   "git@v1": [
     "*.orig",
     "*.rej",

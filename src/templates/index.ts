@@ -14,15 +14,32 @@ import type { Template } from '../gitignore/types.ts';
  * tool created itself. `tests/templates.test.ts` enforces this.
  */
 const registry: Record<string, Template[]> = {
-  // Non-negotiable everywhere: the editor droppings file every repo in the
-  // estate ignores (26 of 26 — a mixed-OS team collects it whoever commits),
-  // and the per-machine Claude Code settings that must never reach a branch.
-  // The rest of the macOS noise is rare and lives in the `macos` stack.
+  // The one file every repo in the estate ignores (26 of 26): a mixed-OS team
+  // collects it whoever commits, which is why it sits here rather than in
+  // `macos`. The rest of the macOS noise is rare and does live there.
+  //
+  // Nothing tool-specific belongs in `core` — the agent settings moved to
+  // `agents` for exactly that reason.
   core: [
     {
       stack: 'core',
       version: 1,
-      lines: ['.DS_Store', '.claude/settings.local.json']
+      lines: ['.DS_Store']
+    }
+  ],
+  // Agent working files, not agent configuration. The distinction is the whole
+  // point: across the estate 126 files under `.claude/`, `.codex/` and
+  // `.opencode/` are committed — settings.json, skills, rules, agent
+  // definitions. Only these two describe one machine.
+  //
+  // `.claude/worktrees/` is included because it accumulates for real, and today
+  // the only repo that ignores it does so in `.git/info/exclude` — private
+  // knowledge that belongs in a file the whole team can see.
+  agents: [
+    {
+      stack: 'agents',
+      version: 1,
+      lines: ['.claude/settings.local.json', '.claude/worktrees/']
     }
   ],
   // Conflict and backup droppings every git repo can produce. Fingerprinted on

@@ -4,7 +4,6 @@
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region deno@v1
@@ -12,3 +11,5 @@ src-deno/target
 # endregion
 
 # endregion
+
+.claude/settings.local.json

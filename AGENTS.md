@@ -75,7 +75,8 @@ frankenphp
 
 - **The header is input; the sections are output.** `stacks:` declares what you want; the sections are what was last rendered. A difference between them is not an error — it is the pending change, the same shape as a tofu plan. Dropping a stack means deleting it from the header and running `sync`; no CLI verb required.
 - **`# region` … `# endregion`, not `# start` … `# end`.** The reason is a concrete reader: **VSCode folds `#region`**, so a 40-line managed block collapses to one line, and the nested form folds at both levels. Versions live in the section markers (`node@v1`) so `check` can spot a stale block.
-- **`core` is listed explicitly, not rendered implicitly.** Always-on would stop a repo forgetting `.claude/settings.local.json`, but it would also make a block appear that nothing asked for. `init` writes `core` into the header; removing it is then a visible act.
+- **`core` is listed explicitly, not rendered implicitly.** Always-on would stop a repo forgetting a rule, but it would also make a block appear that nothing asked for. `init` writes `core` into the header; removing it is then a visible act.
+- **`core` holds `.DS_Store` and nothing else.** It is the anchor, not a catch-all: a mixed-OS team collects that file whoever commits, which is why it outranks the `macos` stack. Anything tool-specific belongs in a stack someone can drop — which is why the agent settings live in `agents`.
 
 ### Detection changes its moment, it does not disappear
 
@@ -124,6 +125,7 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | Stack      | Fingerprint                          | Repos |
 | :--------- | :----------------------------------- | ----: |
 | `core`       | always proposed                    |    27 |
+| `agents`     | `.claude/`, `.codex/`, `.opencode/`|    26 |
 | `git`        | `.git`                             |    27 |
 | `node`       | `package.json`                     |    26 |
 | `dotenv`     | `.env.example` / `.env`            |     7 |
@@ -212,6 +214,7 @@ Four template rules that are not style:
 
 - **Never a bare `.vscode/` or `.idea/`.** git does not descend into an ignored directory, which makes `!` exceptions under it technically impossible. Always `.vscode/*` plus targeted exceptions.
 - **The `!` exceptions are the files the estate actually tracks**, measured, not guessed: `extensions.json` (every repo that shares anything), `settings.json` (seven), `mcp.json` (two). `tasks.json` and `*.code-snippets`, which the toptal block unignores, are tracked by no repo at all. No repo tracks any `.idea` content, so `intellij` ships no exceptions.
+- **`agents` carries working files, not configuration.** Across the estate **126 files** under `.claude/`, `.codex/` and `.opencode/` are committed — `settings.json`, skills, `default.rules`, agent definitions. Only `settings.local.json` and `worktrees/` describe one machine, and only those two are in the block. `.claude/worktrees/` is included because it accumulates for real and the one repo that ignores it today does so in `.git/info/exclude` — private knowledge that belongs where the team can see it.
 - **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
 
 ### Two surfaces, one tool
