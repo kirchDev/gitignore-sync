@@ -1,0 +1,63 @@
+name: 'gitignore-sync'
+description: 'Check that a repository .gitignore still matches the stacks its header declares.'
+author: 'Titus Kirch'
+
+branding:
+  icon: 'git-branch'
+  color: 'green'
+
+inputs:
+  directory:
+    description: 'Repository directory holding the .gitignore to check.'
+    required: false
+    default: '.'
+  version:
+    description: >-
+      Version of gitignore-sync to run. Pin it so a new release cannot turn a
+      green pipeline red on its own.
+    required: false
+    default: 'latest'
+  node-version:
+    description: 'Node version used to run the CLI.'
+    required: false
+    default: '24'
+
+outputs:
+  status:
+    description: '"in-sync" or "drifted".'
+    value: ${{ steps.check.outputs.status }}
+
+# A composite action rather than a bundled JavaScript one: this wraps a single
+# published CLI whose exit code is the whole result. Bundling the tool into
+# dist/index.js would mean shipping the same code twice and keeping the two in
+# step — see kirchDev/coverage-report for the case where bundling does earn its
+# keep, because that action writes comments and check runs of its own.
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - id: check
+      shell: bash
+      env:
+        GIS_DIR: ${{ inputs.directory }}
+        GIS_VERSION: ${{ inputs.version }}
+      run: |
+        set -o pipefail
+        if npx --yes "gitignore-sync@${GIS_VERSION}" check "${GIS_DIR}" 2>&1 | tee "${RUNNER_TEMP}/gitignore-sync.log"; then
+          echo 'status=in-sync' >> "${GITHUB_OUTPUT}"
+        else
+          echo 'status=drifted' >> "${GITHUB_OUTPUT}"
+          {
+            echo '### `.gitignore` is out of sync'
+            echo
+            echo 'Run `gitignore-sync sync` and commit the result.'
+            echo
+            echo '```'
+            cat "${RUNNER_TEMP}/gitignore-sync.log"
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"
+          exit 1
+        fi
