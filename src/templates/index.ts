@@ -58,7 +58,11 @@ const registry: Record<string, Template[]> = {
         'node_modules',
         'dist',
         'coverage',
-        'logs',
+        // Anchored: a bare `logs` matches every directory of that name at any
+        // depth, including Laravel's `storage/logs` and the keeper it commits
+        // there. Nothing in the estate has a root `logs/`, so the anchor costs
+        // nothing. Found by running the rollout against `gildstone`.
+        '/logs',
         '*.log',
         '*.tsbuildinfo',
         '.eslintcache',

@@ -16,7 +16,7 @@
     "node_modules",
     "dist",
     "coverage",
-    "logs",
+    "/logs",
     "*.log",
     "*.tsbuildinfo",
     ".eslintcache",
