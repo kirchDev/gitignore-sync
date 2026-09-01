@@ -1,6 +1,6 @@
 {
   "$schema": "https://www.schemastore.org/package.json",
-  "name": "gitignore-sync",
+  "name": "@kirchdev/gitignore-sync",
   "version": "0.0.0",
   "description": "CLI that keeps a repo's .gitignore maintained — curated blocks inside a managed region, re-rendered idempotently, nothing outside it touched.",
   "keywords": [
@@ -39,7 +39,7 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "link": "pnpm build && pnpm link --global .",
-    "unlink": "pnpm uninstall -g gitignore-sync",
+    "unlink": "pnpm uninstall -g @kirchdev/gitignore-sync && git checkout pnpm-workspace.yaml",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix --deny-warnings",
     "format": "oxfmt --check .",

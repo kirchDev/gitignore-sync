@@ -4,19 +4,19 @@
 
 **Keeps your `.gitignore` maintained, not generated — curated blocks in a region the tool owns, everything else untouched**
 
-[![npm Version](https://img.shields.io/npm/v/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/gitignore-sync)
-[![Downloads](https://img.shields.io/npm/dm/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/gitignore-sync)
+[![npm Version](https://img.shields.io/npm/v/@kirchdev/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
+[![Downloads](https://img.shields.io/npm/dm/@kirchdev/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
 [![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/gitignore-sync/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/kirchDev/gitignore-sync/actions/workflows/ci.yml)
-[![Node Version](https://img.shields.io/node/v/gitignore-sync.svg?style=flat-square&color=8993be)](https://www.npmjs.com/package/gitignore-sync)
-[![License: MIT](https://img.shields.io/npm/l/gitignore-sync.svg?style=flat-square&color=10b981)](LICENSE)
+[![Node Version](https://img.shields.io/node/v/@kirchdev/gitignore-sync.svg?style=flat-square&color=8993be)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
+[![License: MIT](https://img.shields.io/npm/l/@kirchdev/gitignore-sync.svg?style=flat-square&color=10b981)](LICENSE)
 
 </div>
 
 ---
 
 ```bash
-npx gitignore-sync init     # fingerprint the repo, confirm, write the region
-npx gitignore-sync sync     # re-render it, any time, as often as you like
+npx @kirchdev/gitignore-sync init     # fingerprint the repo, confirm, write the region
+npx @kirchdev/gitignore-sync sync     # re-render it, any time, as often as you like
 ```
 
 That's it. The blocks the tool owns stay current; every line you wrote yourself survives verbatim.
@@ -30,10 +30,10 @@ That's it. The blocks the tool owns stay current; every line you wrote yourself 
 ## 📦 Installation
 
 ```bash
-pnpm add -g gitignore-sync   # npm i -g / yarn global add / bun add -g all work
+pnpm add -g @kirchdev/gitignore-sync   # npm i -g / yarn global add / bun add -g all work
 ```
 
-Or run it without installing: `npx gitignore-sync <command>`. The binary is also available as `gis`.
+Or run it without installing: `npx @kirchdev/gitignore-sync <command>`. The binary is also available as `gis`.
 
 ## 🚀 Quick start
 
@@ -144,7 +144,7 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 ## 🧪 Use in CI
 
 ```yaml
-- run: npx gitignore-sync check
+- run: npx @kirchdev/gitignore-sync check
 ```
 
 `check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.

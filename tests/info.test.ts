@@ -22,25 +22,25 @@ describe('info', () => {
 
   it('walks up to the nearest package.json', () => {
     const root = mkdtempSync(join(tmpdir(), 'gis-'));
-    pkg(root, 'gitignore-sync');
+    pkg(root, '@kirchdev/gitignore-sync');
     const deep = join(root, 'dist', 'bin');
     mkdirSync(deep, { recursive: true });
     expect(findPackageRoot(deep)).toEqual({
       dir: root,
-      name: 'gitignore-sync'
+      name: '@kirchdev/gitignore-sync'
     });
   });
 
   it('calls a git work tree a linked build', () => {
     const root = mkdtempSync(join(tmpdir(), 'gis-'));
-    pkg(root, 'gitignore-sync');
+    pkg(root, '@kirchdev/gitignore-sync');
     mkdirSync(join(root, '.git'));
     expect(detectBuild(join(root, 'dist', 'bin.mjs')).kind).toBe('linked');
   });
 
   it('calls the same package without a work tree a release', () => {
     const root = mkdtempSync(join(tmpdir(), 'gis-'));
-    pkg(root, 'gitignore-sync');
+    pkg(root, '@kirchdev/gitignore-sync');
     expect(detectBuild(join(root, 'dist', 'bin.mjs')).kind).toBe('release');
   });
 
@@ -51,7 +51,7 @@ describe('info', () => {
     mkdirSync(join(consumer, '.git'));
     const installed = join(consumer, 'node_modules', 'gitignore-sync');
     mkdirSync(installed, { recursive: true });
-    pkg(installed, 'gitignore-sync');
+    pkg(installed, '@kirchdev/gitignore-sync');
     expect(detectBuild(join(installed, 'dist', 'bin.mjs')).kind).toBe(
       'release'
     );

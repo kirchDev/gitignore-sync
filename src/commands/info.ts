@@ -13,7 +13,10 @@ import { currentTemplate, stackOrder } from '../templates/index.ts';
 // drift-prone literal.
 declare const __APP_VERSION__: string;
 
-const PACKAGE_NAME = 'gitignore-sync';
+/** The package.json `name` this build is identified by. */
+const PACKAGE_NAME = '@kirchdev/gitignore-sync';
+/** What a person types, and what the report is headed with. */
+const BIN_NAME = 'gitignore-sync';
 
 /** `linked` = runs from a git work tree; `release` = an installed package. */
 type BuildKind = 'linked' | 'release' | 'unknown';
@@ -158,7 +161,7 @@ const row = (label: string, value: string): string =>
   `  ${colors.dim(label.padEnd(9))} ${value}\n`;
 
 function renderPretty(info: Info): string {
-  let out = `${colors.bold(PACKAGE_NAME)} ${colors.cyan(`v${info.version}`)} ${colors.dim(`(${BUILD_LABELS[info.build.kind]})`)}\n`;
+  let out = `${colors.bold(BIN_NAME)} ${colors.cyan(`v${info.version}`)} ${colors.dim(`(${BUILD_LABELS[info.build.kind]})`)}\n`;
   out += row('build', colors.dim(info.build.reason));
   if (info.build.packageRoot) out += row('package', info.build.packageRoot);
   out += row('binary', info.binary.resolved ?? colors.dim('unknown'));
