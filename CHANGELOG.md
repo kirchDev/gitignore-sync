@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/kirchDev/gitignore-sync/compare/v0.2.0...v0.2.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **templates:** stop hiding two files Laravel commits ([d011299](https://github.com/kirchDev/gitignore-sync/commit/d0112995b8cdc8c25763b48bf60be868b2755af4))
+
 ## [0.2.0](https://github.com/kirchDev/gitignore-sync/compare/v0.1.0...v0.2.0) (2026-09-01)
 
 
