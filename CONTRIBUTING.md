@@ -28,6 +28,31 @@ cd gitignore-sync
 pnpm install   # wires husky hooks
 ```
 
+### Trying the CLI locally
+
+To run your in-development build as the global `gitignore-sync` command:
+
+```bash
+pnpm setup            # one-time: puts pnpm's global bin on PATH
+source ~/.zshrc       # or open a new shell
+
+pnpm link             # builds, then links this repo globally
+gitignore-sync info   # where it runs from, and what it sees
+```
+
+`gitignore-sync info` answers "which build am I actually running?" — it prints
+`linked / dev build` for a work tree and `installed release` for a package, plus
+the resolved binary path, the shipped stack count and the state of the
+`.gitignore` in the current directory. `--json` for scripts.
+
+Re-running `pnpm build` after a code change updates the binary in place; no
+re-link needed. To undo: `pnpm unlink`.
+
+> [!NOTE]
+> `pnpm link --global .` reinstalls `node_modules` from the lockfile. That is
+> pnpm switching install strategy for a globally registered package — existing
+> work is not lost.
+
 ## Running the suite
 
 | Command          | What it does                                                   |

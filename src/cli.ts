@@ -1,6 +1,8 @@
 import { defineCommand } from 'citty';
+import { auditCommand } from './commands/audit.ts';
 import { checkCommand } from './commands/check.ts';
 import { editCommand } from './commands/edit.ts';
+import { infoCommand } from './commands/info.ts';
 import { addCommand, removeCommand } from './commands/stacks.ts';
 import { initCommand } from './commands/init.ts';
 import { listCommand } from './commands/list.ts';
@@ -24,6 +26,8 @@ export const rootCommand = defineCommand({
     remove: removeCommand,
     sync: syncCommand,
     check: checkCommand,
-    list: listCommand
+    list: listCommand,
+    audit: auditCommand,
+    info: infoCommand
   }
 });

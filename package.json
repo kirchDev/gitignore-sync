@@ -27,7 +27,8 @@
     "gitignore-sync": "./dist/bin/gitignore-sync.mjs"
   },
   "files": [
-    "dist"
+    "dist",
+    "action.yml"
   ],
   "type": "module",
   "publishConfig": {
@@ -37,6 +38,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
+    "link": "pnpm build && pnpm link --global .",
+    "unlink": "pnpm uninstall -g gitignore-sync",
     "lint": "oxlint . --deny-warnings",
     "lint:fix": "oxlint . --fix --deny-warnings",
     "format": "oxfmt --check .",
