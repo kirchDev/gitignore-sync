@@ -26,6 +26,7 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 | :------------------ | :------------------------------------------------------------------ |
 | `pnpm install`      | Install deps and wire husky hooks via the `prepare` script          |
 | `pnpm build`        | `vite build` → `dist/bin/gitignore-sync.mjs`                        |
+| `pnpm link`         | Build, then register this work tree as the global command           |
 | `pnpm dev`          | `vite build --watch`                                                |
 | `pnpm test`         | `vitest run`                                                        |
 | `pnpm lint`         | `oxlint . --deny-warnings`                                          |
@@ -108,7 +109,7 @@ templates        → Record<stack, Template[]> // data, versioned with the binar
 
 `parse`, `render` and `reconcile` touch **no filesystem**. That puts the whole hard part — marker parsing, free zone, rescuing stray lines, dedup — behind a string-in/string-out seam. **Test that seam with fixture pairs under `tests/fixtures/` (`<name>.in` / `<name>.out`), never with temporary directories.** Adding a pair is the cheapest way to pin a behaviour; `tests/fixtures.test.ts` picks it up automatically and asserts idempotency on top.
 
-`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `sync`, `check`, `list`) stay thin and compose the pure parts. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
+`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `edit`, `add`, `remove`, `sync`, `check`, `list`, `info`, `audit`) stay thin and compose the pure parts. `info` is the odd one out: it describes the *installation* rather than the file, so a `linked / dev build` is never mistaken for the published release. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
 
 `edit`, `add` and `remove` are thin verbs over one header edit — they rewrite the `# stacks:` line and re-render, nothing more. They exist because discovering "open the file, change one line, run sync" from an error message is not a workflow.
 
@@ -169,7 +170,7 @@ Deliberate omissions, each for a reason worth keeping:
 - **`.terraform.lock.hcl` is not ignored** — it is meant to be committed.
 - **No `prisma` stack**, even though one repo ignores `src/generated/prisma/`. The path is configurable, so it is a project rule, and the free zone is exactly where it belongs.
 
-**Coverage is measured, not assumed.** `tmp/coverage.ts` and `tmp/subsume.ts` (scratch, gitignored) run the real `reconcile` over every `.gitignore` in the estate and report what is left. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run them before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for.
+**Coverage is measured, not assumed.** `gitignore-sync audit <dirs…>` runs the real `reconcile` over every named repo with every stack declared, and reports what is left — per file and aggregated, `--json` included. It exists as a shipped command rather than a scratch script precisely so a later agent or skill measures with the tool's own semantics instead of reimplementing them. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run it before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for.
 
 **A bare `.idea` or `.vscode` beside a managed block is a defect, not a duplicate.** git does not descend into an ignored directory, so `.vscode` sitting in the free zone silently disables every `!.vscode/…` exception the block renders. `reconcile` reports it as `smothered` — a distinct, louder finding than the equivalent-spelling note, because the file is now doing something other than what it reads like.
 
@@ -190,6 +191,12 @@ Four template rules that are not style:
 - **Never a bare `.vscode/` or `.idea/`.** git does not descend into an ignored directory, which makes `!` exceptions under it technically impossible. Always `.vscode/*` plus targeted exceptions.
 - **The `!` exceptions are the files the estate actually tracks**, measured, not guessed: `extensions.json` (every repo that shares anything), `settings.json` (seven), `mcp.json` (two). `tasks.json` and `*.code-snippets`, which the toptal block unignores, are tracked by no repo at all. No repo tracks any `.idea` content, so `intellij` ships no exceptions.
 - **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
+
+### Two surfaces, one tool
+
+`action.yml` in this repo is a **composite** action wrapping `npx gitignore-sync check`, because the exit code is the whole result — it adds a job summary and a `status` output, nothing else. `kirchDev/coverage-report` bundles its CLI into `dist/index.js` instead, and should: that action writes sticky comments and check runs of its own. Copying its shape here would ship the same code twice and give two things to keep in step.
+
+Most repos need neither. `kirchDev/workflows`' `_ci-check.yml` derives its task list from `package.json`, so adding `gitignore-sync check` to a repo's `check` script is picked up with no workflow change at all.
 
 ## Architecture / conventions
 

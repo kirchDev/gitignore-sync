@@ -45,6 +45,8 @@ gitignore-sync remove intellij  # drop one; your own lines are kept
 gitignore-sync sync             # re-render from the header
 gitignore-sync check            # CI gate: non-zero on drift
 gitignore-sync list             # what this binary ships, and what you declare
+gitignore-sync info             # which build is running, and what it sees
+gitignore-sync audit ../*/      # how much of a whole estate the stacks cover
 ```
 
 Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positional elsewhere), and every writing command takes `--dry-run`.
@@ -146,6 +148,18 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 ```
 
 `check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.
+
+There is also an action, for a job summary on failure and a `status` output:
+
+```yaml
+- uses: kirchDev/gitignore-sync@v0.1.0
+  with:
+    version: '0.1.0'   # pin it, so a release cannot turn a green pipeline red
+```
+
+> [!TIP]
+> Repos whose CI derives its task list from `package.json` need neither — add
+> `gitignore-sync check` to your `check` script and it comes along.
 
 ## 🤝 Contributing
 
