@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.0](https://github.com/kirchDev/gitignore-sync/compare/v0.2.1...v0.3.0) (2026-09-01)
+
+
+### Features
+
+* **templates:** split the agent working files out of core ([bd6800e](https://github.com/kirchDev/gitignore-sync/commit/bd6800ea56f0fa6f2297ddf771a432696a253ebe))
+
+
+### Bug Fixes
+
+* **markers:** deduplicate the stacks line when writing it ([3684732](https://github.com/kirchDev/gitignore-sync/commit/36847322d6509efbe6736e020ba2499d0344b7f1))
+* **reconcile:** render a stack named twice in the header only once ([020f1a4](https://github.com/kirchDev/gitignore-sync/commit/020f1a42039ccfc39e94ee14dca8a738a3235a59))
+* **templates:** anchor the node stack's logs directory ([e217778](https://github.com/kirchDev/gitignore-sync/commit/e217778624cf876cd0492bc2dcc5adbc1eae0ffd))
+
 ## [0.2.1](https://github.com/kirchDev/gitignore-sync/compare/v0.2.0...v0.2.1) (2026-09-01)
 
 

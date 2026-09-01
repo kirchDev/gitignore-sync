@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.schemastore.org/package.json",
   "name": "@kirchdev/gitignore-sync",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "CLI that keeps a repo's .gitignore maintained — curated blocks inside a managed region, re-rendered idempotently, nothing outside it touched.",
   "keywords": [
     "cli",
