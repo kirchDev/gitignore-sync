@@ -43,7 +43,6 @@
     "/public/hot",
     "/public/storage",
     "/storage/*.key",
-    "/storage/pail",
     "/bootstrap/ssr",
     "_ide_helper.php",
     "_ide_helper_models.php",
@@ -60,7 +59,13 @@
   "storybook@v1": ["storybook-static"],
   "nuxt@v1": [".nuxt", ".output", ".nitro", ".data"],
   "tauri@v1": ["src-tauri/target", "src-tauri/gen/schemas"],
-  "dotenv@v1": [".env", ".env.*", "!.env.example", "!.env.*.example"],
+  "dotenv@v1": [
+    ".env",
+    ".env.*",
+    "!.env.example",
+    "!.env.*.example",
+    "!.env.testing"
+  ],
   "vscode@v1": [
     ".vscode/*",
     "!.vscode/extensions.json",

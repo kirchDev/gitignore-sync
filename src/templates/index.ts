@@ -109,6 +109,11 @@ const registry: Record<string, Template[]> = {
       lines: ['/vendor', '/.phpunit.cache', '/.phpunit.result.cache']
     }
   ],
+  // `/storage/pail` is deliberately absent, and so is every other `storage/`
+  // subdirectory: Laravel commits a directory keeper in each of them (`*` plus
+  // `!.gitignore`), which already ignores their contents. Repeating the path
+  // here would ignore the keeper itself — the same defect a bare `.vscode`
+  // causes, only self-inflicted. Found by running the rollout against `app`.
   laravel: [
     {
       stack: 'laravel',
@@ -118,7 +123,6 @@ const registry: Record<string, Template[]> = {
         '/public/hot',
         '/public/storage',
         '/storage/*.key',
-        '/storage/pail',
         '/bootstrap/ssr',
         '_ide_helper.php',
         '_ide_helper_models.php',
@@ -186,7 +190,15 @@ const registry: Record<string, Template[]> = {
     {
       stack: 'dotenv',
       version: 1,
-      lines: ['.env', '.env.*', '!.env.example', '!.env.*.example']
+      lines: [
+        '.env',
+        '.env.*',
+        '!.env.example',
+        '!.env.*.example',
+        // Laravel commits this one alongside the example: it holds the test
+        // suite's settings, not credentials.
+        '!.env.testing'
+      ]
     }
   ],
   // `.vscode/*` plus targeted `!` exceptions, never a bare `.vscode/`: git does
