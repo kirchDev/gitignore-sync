@@ -49,7 +49,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "templates:lock": "node scripts/templates-lock.ts",
-    "check": "pnpm lint && pnpm format && pnpm typecheck && pnpm check:policy && pnpm test",
+    "check": "pnpm lint && pnpm format && pnpm typecheck && pnpm check:policy && pnpm test && pnpm build",
     "check:fix": "pnpm lint:fix && pnpm format:fix",
     "check:policy": "node scripts/check-policy-parity.ts",
     "skills:update": "pnpm dlx skills@latest update -p -y",
