@@ -60,6 +60,9 @@ const SKIP = new Set([
 
 const fingerprints: Record<string, Fingerprint> = {
   core: { source: 'repo', always: true },
+  // Any repo an agent has ever run in has the directory; proposing the stack
+  // there is what keeps settings.local.json out of a branch.
+  agents: { source: 'repo', files: ['.claude', '.codex', '.opencode'] },
   // Every repository this runs in is one.
   git: { source: 'repo', files: ['.git'] },
   node: { source: 'repo', files: ['package.json'] },

@@ -117,7 +117,12 @@ export function reconcile(doc: Document): Reconciliation {
   }
 
   const sections: Section[] = [];
+  // A stack named twice in the header renders its block twice, and the
+  // duplicate lines then read as drift on every later run. First mention wins.
+  const seenStack = new Set<string>();
   for (const stack of declared) {
+    if (seenStack.has(stack)) continue;
+    seenStack.add(stack);
     const template = currentTemplate(stack);
     if (template) {
       sections.push({

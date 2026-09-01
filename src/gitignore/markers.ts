@@ -47,8 +47,9 @@ export function matchStacks(line: string): string[] | undefined {
     : [];
 }
 
+/** Deduplicated, first mention winning — a name twice says nothing twice. */
 export const stacksLine = (stacks: string[]): string =>
-  `# stacks: ${stacks.join(', ')}`;
+  `# stacks: ${[...new Set(stacks)].join(', ')}`;
 
 /** Cosmetic rule under the header; regenerated on every render. */
 export const DIVIDER = `# ${'─'.repeat(41)}`;

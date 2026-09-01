@@ -11,6 +11,24 @@ describe('templates', () => {
     expect(knownStacks()).toContain('node');
   });
 
+  // `core` is the anchor, not a catch-all. Anything tool-specific belongs in a
+  // stack someone can drop.
+  it('keeps core free of anything tool-specific', () => {
+    const core = currentTemplate('core')?.lines ?? [];
+    expect(core).toEqual(['.DS_Store']);
+    for (const line of core) {
+      expect(line).not.toMatch(/\.(claude|codex|cursor|opencode)\b/);
+    }
+  });
+
+  it('carries the agent working files, not the shared configuration', () => {
+    const agents = currentTemplate('agents')?.lines ?? [];
+    expect(agents).toContain('.claude/settings.local.json');
+    // settings.json, skills and rules are committed across the estate.
+    expect(agents).not.toContain('.claude/settings.json');
+    expect(agents.some((l) => l.includes('skills'))).toBe(false);
+  });
+
   it('puts node_modules in the node stack, not in core', () => {
     expect(currentTemplate('node')?.lines).toContain('node_modules');
     expect(currentTemplate('core')?.lines).not.toContain('node_modules');

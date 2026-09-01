@@ -4,7 +4,6 @@
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region vscode@v1

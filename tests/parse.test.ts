@@ -99,6 +99,11 @@ describe('withStacks', () => {
     expect(next.header).toEqual(['# stacks: php', '# stacks: node']);
   });
 
+  it('deduplicates the declaration it writes', () => {
+    const next = withStacks(doc('# stacks: core'), ['core', 'node', 'core']);
+    expect(next.header).toEqual(['# stacks: core, node']);
+  });
+
   it('writes an empty declaration for no stacks', () => {
     expect(withStacks(doc('# stacks: core'), []).header).toEqual([
       '# stacks: '

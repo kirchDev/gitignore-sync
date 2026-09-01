@@ -4,14 +4,13 @@
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
 node_modules
 dist
 coverage
-logs
+/logs
 *.log
 *.tsbuildinfo
 .eslintcache
@@ -23,3 +22,4 @@ logs
 
 frankenphp
 /storage/*.key
+.claude/settings.local.json

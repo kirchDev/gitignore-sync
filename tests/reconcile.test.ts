@@ -129,6 +129,14 @@ describe('reconcile', () => {
     ]);
   });
 
+  it('renders a stack named twice in the header only once', () => {
+    const result = reconcileText(doc('core, node, core'));
+    expect(result.document.sections.map((s) => s.stack)).toEqual([
+      'core',
+      'node'
+    ]);
+  });
+
   it('drops a section the header no longer declares', () => {
     const result = reconcileText(
       doc('core', '\n# region node@v1\nnode_modules\n# endregion\n')

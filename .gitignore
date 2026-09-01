@@ -1,10 +1,14 @@
 # region gitignore-sync
-# stacks: core, git, node, vscode, intellij
+# stacks: core, agents, git, node, vscode, intellij
 # ─────────────────────────────────────────
 
 # region core@v1
 .DS_Store
+# endregion
+
+# region agents@v1
 .claude/settings.local.json
+.claude/worktrees/
 # endregion
 
 # region git@v1
@@ -24,7 +28,7 @@
 node_modules
 dist
 coverage
-logs
+/logs
 *.log
 *.tsbuildinfo
 .eslintcache

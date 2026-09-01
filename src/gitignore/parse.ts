@@ -127,7 +127,9 @@ export function parse(text: string): Document {
 export function readStacks(doc: Document): string[] {
   for (const line of doc.header) {
     const stacks = matchStacks(line);
-    if (stacks) return stacks;
+    // Deduplicated, first mention winning: a header that names a stack twice
+    // must not render its block twice.
+    if (stacks) return [...new Set(stacks)];
   }
   return [];
 }
