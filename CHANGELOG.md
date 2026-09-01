@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/kirchDev/gitignore-sync/compare/v0.3.0...v0.3.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **ci:** pin the reusable workflow to a full commit hash ([14db690](https://github.com/kirchDev/gitignore-sync/commit/14db690497d0752edb734b4d1463c040ec0a1cf5))
+* **ci:** publish to npm when release-please cuts a release ([4bb50b6](https://github.com/kirchDev/gitignore-sync/commit/4bb50b6e839fc7b3ffff38269ac6b2380fc3708c))
+
 ## [0.3.0](https://github.com/kirchDev/gitignore-sync/compare/v0.2.1...v0.3.0) (2026-09-01)
 
 
