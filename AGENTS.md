@@ -16,46 +16,199 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 
 ## What this repo is
 
-`scaffold` is a **GitHub template repository**, not an application. It ships the meta layer (lint, format, commit hooks, CI, CodeQL, Dependabot, release-please, issue/PR templates, standard meta docs) that every new kirchDev repo should start with. There is no application code — the project code can be anything (PHP, Go, Rust, Vue, shell). Only the meta layer lives here.
+`gitignore-sync` is a **CLI that keeps a repo's `.gitignore` maintained**, not one that generates it once. It holds curated blocks — `core`, plus one per declared stack — inside a managed region it owns, re-renders them idempotently on demand, and never touches anything outside that region.
 
-Implication: when changing files, ask "does this default make sense for _every_ future repo created from this template?" — not just for one project type.
+**The whole differentiator is in the verb.** `gitignore.io`, `gig` and `ignr` all _fetch and dump_: you pull once, paste, and drift from there. None of them re-syncs. That gap is the reason this exists, and it is why the tool is called `-sync` and not `-generate`.
 
 ## Commands
 
-| Command             | What it does                                               |
-| :------------------ | :--------------------------------------------------------- |
-| `pnpm install`      | Install deps and wire husky hooks via the `prepare` script |
-| `pnpm lint`         | `oxlint . --deny-warnings`                                 |
-| `pnpm format`       | `oxfmt --check .` (note: `format` is the check, not fix)   |
-| `pnpm typecheck`    | `tsc --noEmit` over the meta scripts                       |
-| `pnpm check`        | Runs `lint` + `format` + `typecheck` + `check:policy` — the CI gate |
-| `pnpm check:policy` | Proves the two agent policy files ban the same commands    |
-| `pnpm lint:fix`     | Auto-fix lint                                              |
-| `pnpm format:fix`   | Auto-fix format                                            |
-| `pnpm check:fix`    | Auto-fix lint + format                                     |
-| `pnpm skills:update`| Update project-scoped agent skills via the skills.sh CLI   |
-| `pnpm taze`         | Interactive dependency upgrade check                       |
-| `pnpm taze:w`       | Write upgrade results                                      |
+| Command             | What it does                                                        |
+| :------------------ | :------------------------------------------------------------------ |
+| `pnpm install`      | Install deps and wire husky hooks via the `prepare` script          |
+| `pnpm build`        | `vite build` → `dist/bin/gitignore-sync.mjs`                        |
+| `pnpm dev`          | `vite build --watch`                                                |
+| `pnpm test`         | `vitest run`                                                        |
+| `pnpm lint`         | `oxlint . --deny-warnings`                                          |
+| `pnpm format`       | `oxfmt --check .` (note: `format` is the check, not fix)            |
+| `pnpm typecheck`    | `tsc --noEmit`                                                      |
+| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` — the CI gate |
+| `pnpm check:policy` | Proves the two agent policy files ban the same commands             |
+| `pnpm templates:lock`| Re-writes `tests/templates.lock.json` after adding a template version |
+| `pnpm check:fix`    | Auto-fix lint + format                                              |
+| `pnpm skills:update`| Update project-scoped agent skills via the skills.sh CLI            |
+| `pnpm taze`         | Interactive dependency upgrade check                                |
 
-There is no test suite — this is config-only. CI runs `pnpm lint`, `pnpm format`, `pnpm typecheck` and `pnpm check:policy` on PR.
+## The design, settled
+
+These are decisions taken before the first commit, with reasons. Change them only against the reason, never by preference.
+
+### Configuration lives in the `.gitignore` itself
+
+**Because detection cannot cover half the problem.** Fingerprints work for stacks — `package.json` → node, `composer.json` → laravel, `go.mod` → go. They cannot work for `vscode`, `intellij`, `macos` or `windows`: those are properties of the **person** working on the repo, not of the repo. Nothing in the tree fingerprints them.
+
+So a declaration is unavoidable — and once one is needed, the cheapest place is the file being configured. No second file to drift from the first.
+
+### The shape
+
+```gitignore
+# region gitignore-sync
+# stacks: core, node, vscode, intellij
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# region node@v1
+node_modules
+dist
+coverage
+# endregion
+
+# endregion
+
+frankenphp
+/bootstrap/ssr
+```
+
+- **The header is input; the sections are output.** `stacks:` declares what you want; the sections are what was last rendered. A difference between them is not an error — it is the pending change, the same shape as a tofu plan. Dropping a stack means deleting it from the header and running `sync`; no CLI verb required.
+- **`# region` … `# endregion`, not `# start` … `# end`.** The reason is a concrete reader: **VSCode folds `#region`**, so a 40-line managed block collapses to one line, and the nested form folds at both levels. Versions live in the section markers (`node@v1`) so `check` can spot a stale block.
+- **`core` is listed explicitly, not rendered implicitly.** Always-on would stop a repo forgetting `.claude/settings.local.json`, but it would also make a block appear that nothing asked for. `init` writes `core` into the header; removing it is then a visible act.
+
+### Detection changes its moment, it does not disappear
+
+| Command         | Detection                                                    |
+| :-------------- | :----------------------------------------------------------- |
+| `init`          | **yes** — fingerprint the repo, propose the header from it   |
+| `sync`          | **no** — read the header, render from it, nothing else       |
+| `sync --detect` | **proposes** header changes, never applies them silently     |
+
+This is the property that matters: **adding a `composer.json` must not quietly rewrite someone's `.gitignore`.** Zero-config at the start, explicit and stable afterwards.
+
+### The rule that makes it safe to run twice
+
+A hand-written line found **inside** a managed section is recognised as not coming from the template and **moved to the free zone** — never dropped on re-render. Without it the tool is a data-loss risk and nobody runs it a second time.
+
+Deduplication is git-semantics aware: exact string duplicates are removed; `.idea`, `.idea/`, `/.idea` and `.idea/*` are **not** the same thing to git, so equivalence is only ever **reported**, never merged.
+
+The free zone is filtered **block by block, not line by line** (blank lines separate blocks). A comment is a heading for the patterns beneath it, so once a managed block has absorbed every one of them, the heading is dropped as an orphan — that is most of what makes a fetch-and-dump file long. A block that was only ever a note keeps standing, and a heading whose block still holds a pattern is untouched.
+
+The free zone survives verbatim: every non-blank line is preserved, in order. Only blank padding at its edges is normalised, which is what makes a second `sync` a no-op and `check` a usable CI gate.
+
+## Module shape — keep the core pure
+
+```
+parse(text)      → Document { header, sections, freeZone, hasRegion }
+render(Document) → text
+reconcile(doc)   → Reconciliation { document, rescued, duplicates, covered, equivalences, … }
+detect(dir)      → string[]                  // the only filesystem contact
+templates        → Record<stack, Template[]> // data, versioned with the binary
+```
+
+`parse`, `render` and `reconcile` touch **no filesystem**. That puts the whole hard part — marker parsing, free zone, rescuing stray lines, dedup — behind a string-in/string-out seam. **Test that seam with fixture pairs under `tests/fixtures/` (`<name>.in` / `<name>.out`), never with temporary directories.** Adding a pair is the cheapest way to pin a behaviour; `tests/fixtures.test.ts` picks it up automatically and asserts idempotency on top.
+
+`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `sync`, `check`, `list`) stay thin and compose the pure parts. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
+
+`edit`, `add` and `remove` are thin verbs over one header edit — they rewrite the `# stacks:` line and re-render, nothing more. They exist because discovering "open the file, change one line, run sync" from an error message is not a workflow.
+
+**`init` and `edit` are the interactive pair; `add` and `remove` are their scriptable form.** `init` asks in two steps rather than one long list: a confirm on the whole proposal as one list, then a multiselect over whatever is left. Answering "no" falls back to picking everything by hand with nothing pre-ticked, since re-offering a rejected proposal only gives someone something to un-tick. `edit` is the same multiselect over an existing header.
+
+**Neither may hang or guess when there is no terminal.** `init` without a TTY (or with `--yes` / `--stacks=`) takes detection and writes — that is the path CI runs. `edit` refuses outright and names `add`/`remove`, because there is no sensible default for "change this to what?".
+
+### The stacks, and where they came from
+
+Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` repos, not from a public template site. The count is how many of them the stack applies to.
+
+| Stack      | Fingerprint                          | Repos |
+| :--------- | :----------------------------------- | ----: |
+| `core`       | always proposed                    |    27 |
+| `git`        | `.git`                             |    27 |
+| `node`       | `package.json`                     |    26 |
+| `dotenv`     | `.env.example` / `.env`            |     7 |
+| `php`        | `composer.json`                    |     3 |
+| `go`         | `go.mod`                           |     3 |
+| `turborepo`  | `turbo.json`                       |     3 |
+| `tofu`       | `*.tf` / `*.tofu` / lock file      |     1 |
+| `laravel`    | `artisan`                          |     1 |
+| `nuxt`       | `nuxt.config.*`                    |     1 |
+| `tauri`      | `src-tauri/`                       |     1 |
+| `storybook`  | `.storybook/`                      |     1 |
+| `rust`       | a **root** `Cargo.toml`            |     0 |
+| `playwright` | `playwright.config.*`              |     0 |
+| `vscode`     | a `.vscode/` here *(machine)*      |     — |
+| `intellij`   | a `.idea/` here *(machine)*       |     — |
+| `vim`        | `$EDITOR` / `$VISUAL` *(machine)* |     — |
+| `macos`      | `process.platform` *(machine)*    |     — |
+| `windows`    | `process.platform` *(machine)*    |     — |
+| `linux`      | `process.platform` *(machine)*    |     — |
+
+Two stacks show **0**, on purpose. `rust` is fingerprinted on a *root* `Cargo.toml` only — the one Tauri app keeps its crate under `src-tauri/`, and that build output already belongs to the `tauri` stack, so matching it there would render a `/target` line pointing at nothing. `playwright` ships because one repo ignores its three output dirs, but that repo has no root config, so nothing in the estate currently triggers it; it is declared by hand until one does.
+
+### One detector, and a `source` on every signal
+
+There is **one** fingerprint table and **one** `detect(dir)` pass. A `.vscode/` directory sits in the repo directory exactly like `package.json` does, so detecting them two different ways would be an invented distinction.
+
+What differs is not how a signal is found but what it is evidence *of*, and that rides along as a field:
+
+| `source`  | What it reads                                                       | Holds for                     |
+| :-------- | :------------------------------------------------------------------ | :---------------------------- |
+| `repo`    | committed markers — `package.json`, `go.mod`, `*.tf`, `.env.example` | everyone who clones           |
+| `machine` | `.vscode/`, `.idea/` (themselves ignored), `$EDITOR`, `process.platform` | one keyboard              |
+
+Both are proposed together, as one list, and the prompt does not sort them apart — a person confirming a proposal does not need a lecture on where each line came from. The field decides exactly one thing: **whether a signal may write the header without a human confirming it.** `committedOnly()` is that filter, and `init --yes` and the no-TTY path are its only callers — they say what they skipped and how to add it back, because there a line is missing and that does need explaining.
+
+The reason is that the header is committed. A CI runner is Linux with no editor directory, so an unfiltered `--yes` in a pipeline would write `linux` into a file that then claims it for the whole team. `tests/detect.test.ts` pins it: `.vscode/` and `.idea/` show up in `detect`, and never in `committedOnly`.
+
+What the brief said stays true, just narrower than the old prompt copy implied: nothing in a repo can tell you what the **other** contributors use. It can tell you what **you** use, and that is worth offering as a default someone confirms.
+
+Deliberate omissions, each for a reason worth keeping:
+
+- **`composer.lock` is in no template.** A library ignores it, an application commits it — a project decision, so it belongs in the free zone.
+- **`dist` belongs to `node` alone**, not to `go`. goreleaser writes there too, but a line may live in only one stack (below), and `node` claims it.
+- **`.terraform.lock.hcl` is not ignored** — it is meant to be committed.
+- **No `prisma` stack**, even though one repo ignores `src/generated/prisma/`. The path is configurable, so it is a project rule, and the free zone is exactly where it belongs.
+
+**Coverage is measured, not assumed.** `tmp/coverage.ts` and `tmp/subsume.ts` (scratch, gitignored) run the real `reconcile` over every `.gitignore` in the estate and report what is left. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run them before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for.
+
+**A bare `.idea` or `.vscode` beside a managed block is a defect, not a duplicate.** git does not descend into an ignored directory, so `.vscode` sitting in the free zone silently disables every `!.vscode/…` exception the block renders. `reconcile` reports it as `smothered` — a distinct, louder finding than the equivalent-spelling note, because the file is now doing something other than what it reads like.
+
+**Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo.
+
+### Templates carry their version history
+
+`src/templates/index.ts` keeps **every version a stack has ever shipped**, ascending. Reconciling reads the version the section marker names, so upgrading `node@v1` to `node@v2` knows which lines it put there itself and which the user added. Without that history an upgrade would "rescue" its own dropped lines into the free zone. When you change a template, **add a version — never edit one in place.**
+
+**That rule is checked, not trusted.** `tests/templates.lock.json` holds every locked version with its lines, and `tests/templates.lock.test.ts` fails when one of them changes. Editing `node@v1` in place therefore cannot reach `main` unless someone also runs `pnpm templates:lock` — which shows up as a diff on the lock, and that diff is the thing a reviewer has to be asked about. Adding a *new* version needs no re-run (the test only guards what the lock already knows), but run it anyway so the next change is guarded too.
+
+The history grows, slowly. Dropping a very old version is allowed and degrades safely: `reconcile` falls back to the current template, which means it rescues more than it needs to rather than deleting something it shouldn't.
+
+Four template rules that are not style:
+
+- **No line may appear in two stacks.** A repo declaring both would render it twice, and the equivalence report would then nag about a collision the tool created itself. `tests/templates.test.ts` enforces it.
+
+- **Never a bare `.vscode/` or `.idea/`.** git does not descend into an ignored directory, which makes `!` exceptions under it technically impossible. Always `.vscode/*` plus targeted exceptions.
+- **The `!` exceptions are the files the estate actually tracks**, measured, not guessed: `extensions.json` (every repo that shares anything), `settings.json` (seven), `mcp.json` (two). `tasks.json` and `*.code-snippets`, which the toptal block unignores, are tracked by no repo at all. No repo tracks any `.idea` content, so `intellij` ships no exceptions.
+- **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
 
 ## Architecture / conventions
 
-- **Node 24, pnpm 11.** Pinned via `.nvmrc`, `engines`, and `packageManager`. `pnpm-workspace.yaml` enforces `minimumReleaseAge=4320` (3-day cooldown), isolated node-linker. Don't loosen these without reason. Package-manager enforcement carries no key on purpose: pnpm 11 replaced `packageManagerStrict`/`packageManagerStrictVersion` with `pmOnFail`, whose default `download` already errors on a foreign package manager and fetches the pinned pnpm version — every other value only weakens it, so leave it unset (the rationale sits as a comment in the file).
-- **oxc, not eslint/prettier.** Linting via `oxlint`, formatting via `oxfmt`. Configs live in `.oxlintrc.json` / `.oxfmtrc.json`. `oxlint` uses `unicorn` + `oxc` plugins; rules deliberately minimal.
-- **TypeScript, no build step.** The meta scripts and the three tool configs are `.ts` — Node 24 strips types natively, so `scripts/check-policy-parity.ts`, `commitlint.config.ts`, `lint-staged.config.ts` and `taze.config.ts` stay directly executable and each tool loads its own `.ts` config unaided. `tsconfig.json` is `noEmit` + `strict` + `erasableSyntaxOnly`, so only strippable syntax (no enums, no parameter properties) can be written; `pnpm typecheck` is the gate. TypeScript is a devDependency of the template's meta layer only — a downstream PHP, Go or Rust repo inherits it for that and nothing else, and drops it by deleting `tsconfig.json`, the `typecheck` script and the four `.ts` files' types.
-- **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`. `oxlint --fix --deny-warnings` then `oxfmt` on JS/TS; `oxfmt` only on JSON/YAML/MD.
+- **Node 24, pnpm 11.** Pinned via `.nvmrc`, `engines`, and `packageManager`. Not Bun — the sibling `forgemap` declares `engines.node >= 24` and this repo follows it. `pnpm-workspace.yaml` enforces `minimumReleaseAge=4320` (3-day cooldown), isolated node-linker. Package-manager enforcement carries no key on purpose: pnpm 11 replaced `packageManagerStrict`/`packageManagerStrictVersion` with `pmOnFail`, whose default `download` already errors on a foreign package manager and fetches the pinned pnpm version — every other value only weakens it, so leave it unset.
+- **oxc, not eslint/prettier.** Linting via `oxlint`, formatting via `oxfmt`. Configs live in `.oxlintrc.json` / `.oxfmtrc.json`.
+- **TypeScript, built with vite.** `tsconfig.json` is `noEmit` + `strict` + `noUncheckedIndexedAccess` + `erasableSyntaxOnly`, so only strippable syntax (no enums, no parameter properties) can be written — which also keeps the meta scripts and tool configs (`scripts/check-policy-parity.ts`, `commitlint.config.ts`, `lint-staged.config.ts`, `taze.config.ts`) directly executable on Node 24. Source imports carry `.ts` extensions.
+- **The CLI's `--version` is injected at build time** by vite's `define` from `package.json`'s `version`, which release-please owns. Never hand-copy a version literal.
+- **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge.
+- **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
 - **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
-- **release-please is included** (unlike many templates that omit it). Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`. Config uses `release-type: simple` (language-agnostic), `include-v-in-tag: true`. Downstream repos start at `0.0.0` and reset via the steps in README → _Resetting release-please_.
-- **Workflows** use `actions/checkout@v6`, `actions/setup-node@v6`, `pnpm/action-setup@v6`, `github/codeql-action/{init,analyze}@v4`. Keep these pinned to major versions; Dependabot bumps them monthly.
-- **CodeQL** scans `actions` + `javascript-typescript` with `security-extended,security-and-quality` queries, gated by path filters so non-code changes don't trigger it.
-- **Dependabot** groups all minor/patch updates per ecosystem into a single PR (`npm-minor-patch`, `actions-minor-patch`). Majors come as separate PRs.
+- **release-please** with `release-type: node`, `include-v-in-tag: true`. Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
+- **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6`, `github/codeql-action/{init,analyze}@v4`. Keep these pinned to major versions; Dependabot bumps them monthly.
+- **Bitwarden secret ids in workflows are vault references, not credentials.** The actual secret is `BWS_ACCESS_TOKEN`, a GitHub secret that never appears in a workflow file. Each owner authenticates as a different machine account and reads only its own `-ci` mirror, so this repo — a `kirchDev` repo — must carry the `kirchDev` id (`df8b447a-ffd5-4009-9cc3-b49b014f6978`), not `TitusKirch`'s. A mismatched id resolves for nobody, silently, until someone dispatches the workflow.
 
 ## AI & skills
 
-- **`.claude/settings.json`** ships a baseline permission policy — see _Permission policy_ below for the rules it follows. `.claude/settings.local.json` (per-machine overrides, typically `enabledMcpjsonServers`) is gitignored.
+- **`.claude/settings.json`** ships a baseline permission policy — see _Permission policy_ below for the rules it follows. `.claude/settings.local.json` (per-machine overrides) is gitignored.
 - **`.tituskirch-skills.json`** configures the [TitusKirch skills](https://github.com/TitusKirch/skills) (commit, PR, issue, release, docs …) per repo. It is the runtime **config**, not an installer. Regenerate/reconcile it with the `tituskirch-skills-config` skill.
-- **Installing the skills.** The bundle is installed via the skills.sh CLI (`pnpm dlx skills add TitusKirch/skills`), not vendored into the repo. `pnpm skills:update` refreshes project-scoped skills tracked in `skills-lock.json` (only present once a repo actually installs project skills).
+- **Installing the skills.** The bundle is installed via the skills.sh CLI (`pnpm dlx skills add TitusKirch/skills`), not vendored into the repo. `pnpm skills:update` refreshes project-scoped skills tracked in `skills-lock.json`.
 
 ## Permission policy
 
@@ -63,18 +216,16 @@ There is no test suite — this is config-only. CI runs `pnpm lint`, `pnpm forma
 
 **`deny` may be generous.** A rule for a command the repo doesn't have is a no-op, it never needs maintenance, and it is never reviewed — a too-broad block only surfaces when you actually hit it. So the list covers every stack kirchDev repos might grow into (Laravel, Prisma, Terraform/OpenTofu, AWS), not just this one. `git reflog expire` and `git gc --prune=now` are in there because they destroy the rescue path that survives a `reset --hard`.
 
-The line to draw is **the machine or something remote, not the working copy**. Blocked: anything that wrecks the OS (`dd`, `mkfs`, `chmod -R`, `rm -rf /…`), tears down remote state or resources (`terraform destroy`, `state rm`, `aws ec2 terminate-instances`, `gh repo delete`), or throws away work with no recovery path (force-push, `reset --hard`, `stash drop`). Deliberately *not* blocked, because they are ordinary local development: `rm -rf node_modules`, `docker volume rm`, `docker compose down -v`, `docker system prune`, `php artisan tinker`, deleting a remote branch. Those prompt instead — a command that is sometimes wanted belongs in the middle state, never in `deny`.
+The line to draw is **the machine or something remote, not the working copy**. Blocked: anything that wrecks the OS (`dd`, `mkfs`, `chmod -R`, `rm -rf /…`), tears down remote state or resources (`terraform destroy`, `state rm`, `aws ec2 terminate-instances`, `gh repo delete`), or throws away work with no recovery path (force-push, `reset --hard`, `stash drop`). Deliberately *not* blocked, because they are ordinary local development: `rm -rf node_modules`, `docker volume rm`, `docker compose down -v`, `docker system prune`, deleting a remote branch. Those prompt instead — a command that is sometimes wanted belongs in the middle state, never in `deny`.
 
 **`allow` must stay short.** Its only return is fewer prompts — no safety is gained. Every line has to be read and understood by whoever copies this file, and an unreviewed allow list is more dangerous than none. Keep what occurs many times per session (read-only git, `ls`/`grep`/`rg`, the project's own check scripts) and let everything else ask.
 
 **Three states, not two.** A command in `allow` runs unasked; one in `deny` is impossible and has to be typed by hand; one in **neither list prompts you** — and that middle state is the right default for almost everything. Reserve `deny` for what a mistaken "yes" could not undo. A normal `git push` is not that: it is reversible, visible and the ordinary way work ships, so it sits in `allow`.
 
 > [!IMPORTANT]
-> **Never allow a rule that runs arbitrary code.** `php artisan tinker --execute`, `pnpm exec turbo run`, `find . *` (which covers `-delete` and `-exec rm`), a raw `pnpm dlx`, or an MCP tool that executes SQL (`database-query`, `run-query`) each hand back everything the `deny` list took away — a blocked `db:wipe` means nothing next to an allowed `tinker --execute 'DB::statement(...)'`. A deny list is only as strong as the weakest allow rule beside it.
+> **Never allow a rule that runs arbitrary code.** `pnpm exec turbo run`, `find . *` (which covers `-delete` and `-exec rm`), a raw `pnpm dlx`, or an MCP tool that executes SQL each hand back everything the `deny` list took away. A deny list is only as strong as the weakest allow rule beside it.
 
 Two things this file cannot do, by design: it cannot tell which branch a `git push` targets (protect release branches with **branch protection**, not permissions), and prefix rules miss flags placed before the subcommand (`docker compose -f x.yml down -v`). Treat it as lowering the odds, not as a guarantee.
-
-Downstream repos keep the `deny` list as-is and swap the `pnpm` lines in `allow` for whatever their stack runs.
 
 **Codex gets the same policy** in `.codex/rules/default.rules` — permission config is not portable, so the block list exists twice and **both must be changed together**. Codex uses Starlark `prefix_rule()` calls matching on argument *tokens*, which handles flags and shell chains that the `Bash(…)` prefix patterns miss, and every rule carries its own `match`/`not_match` cases. Check a rule with:
 
@@ -85,45 +236,16 @@ codex execpolicy check --pretty --rules .codex/rules/default.rules -- git push -
 **Parity between the two is machine-checked, not eyeballed.** `pnpm check:policy` (`scripts/check-policy-parity.ts`, part of `pnpm check` and of CI) expands every `prefix_rule` into its concrete argv prefixes — the cartesian product over its alternation lists — and matches the two sets in both directions, so "we changed both files" becomes a number rather than a claim. Two things it encodes are worth knowing before editing either file:
 
 - **The languages differ, so a few gaps cannot be closed.** Claude Code matches a prefix of the command _string_; a `prefix_rule` matches whole argv _tokens_. `Bash(aws iam delete-:*)` therefore bans every delete verb AWS will ever ship, and the Codex side can only enumerate the ones it ships today. Such a difference is legal but must be **declared** — in the `DELIBERATE` list in the script and in the `.codex/rules/default.rules` header — and the check fails both on an undeclared one and on a declaration that has gone stale.
-- **Neither language normalises flag order or case.** `rm -rf /` and `rm -fr /` are separate bans; `rm -r -f /` and `redis-cli FlushAll` are neither, and enumerating permutations never ends. The check proves the two files list the **same spellings** — it does not claim the set of spellings is complete. Same caveat as the two below, and for the same reason.
+- **Neither language normalises flag order or case.** `rm -rf /` and `rm -fr /` are separate bans; `rm -r -f /` and `redis-cli FlushAll` are neither, and enumerating permutations never ends. The check proves the two files list the **same spellings** — it does not claim the set of spellings is complete.
 
 ## Branching model
 
-The default here is a **`dev` integration branch**: branch off `dev`, PR into `dev`, roll `dev` up into `main`, and release-please releases from `main`. That is what most kirchDev repos run, so the template runs it too — a variant that ships switched off is a variant nobody notices is broken.
-
-> [!IMPORTANT]
-> A repo created from this template has the `dev` config but **no `dev` branch**. Create it before the first Dependabot run: with `target-branch: 'dev'` pointing at a branch that doesn't exist, Dependabot opens nothing at all. Going main-only (below) is a deliberate step too — leaving the config untouched is the one option that silently does nothing.
+Branch off `dev`, PR into `dev`, roll `dev` up into `main`, and release-please releases from `main`.
 
 `.github/workflows/dev-pr.yml` opens and updates the rolling draft `dev` → `main` PR. Mark that PR ready and **merge it with a merge commit, never a squash**: squashing collapses the individual `feat:`/`fix:` commits into the PR's own `chore:` title, and release-please then cuts nothing.
 
-Going **main-only** is three edits, all of them removals:
-
-```bash
-rm .github/workflows/dev-pr.yml
-# .github/dependabot.yml    — drop both `target-branch: 'dev'` lines
-# .tituskirch-skills.json   — set `pr.base` to "main"
-```
-
-Nothing is vendored for this. A variant worth shipping as files is one that *adds* something — content that would otherwise be lost, the way `dev-pr.yml` itself would be. A variant that only deletes has nothing to preserve, so it stays documented, exactly like _Public vs private repos_ below.
-
-`ci.yml` and `codeql.yml` list both `main` and `dev` in their `on: branches:` filters and neither edit touches them. A filter naming a branch that doesn't exist is a no-op, so it costs a main-only repo nothing — and without `dev` in `ci.yml`, PRs into `dev` (Dependabot's included) would run no CI at all.
-
-Variants that are *purely* deletions — see _Public vs private repos_ below — stay documented rather than vendored; only this one earns the folder.
-
-## Public vs private repos
-
-Some meta defaults only make sense for one visibility. When spinning up a repo from this template, adjust for its visibility:
-
-- **CodeQL / code scanning** (`.github/workflows/codeql.yml`) depends on GitHub Advanced Security. It's free on **public** repos; on a **private** repo without a GHAS license it won't run — delete `codeql.yml` (and the CodeQL note above) rather than leave a dead workflow. The same goes for other GHAS-gated features (secret scanning, etc.). Dependabot version updates work on both.
-- **License.** A **public** repo ships MIT: keep `LICENSE` and the `[MIT](LICENSE) © …` README footer. A **private** repo is proprietary: remove/replace `LICENSE`, drop the MIT footer, and set `package.json` to `"license": "UNLICENSED"` (keep `"private": true`).
-- **Discord forum links.** `.github/ISSUE_TEMPLATE/config.yml` points questions, ideas and possible bugs at the repo's Discord forum (each open-source repo gets one, provisioned from the `infrastructure` repo's OpenTofu). Confirmed bugs and features stay as the GitHub issue forms. A **private** repo has no forum — drop the `contact_links` block; if you still want an in-repo Q&A path, restore a simple `question.yml`.
+`ci.yml` and `codeql.yml` list both `main` and `dev` in their `on: branches:` filters.
 
 ## House style for READMEs and meta files
 
 `/write-readme` skill encodes the canonical structure. Key rules: hero block wrapped in `<div align="center">`, prescribed section emojis (✨ Features, 🚀 Setup, 🤝 Contributing, 🛣️ Versioning, 📄 License), license footer always reads `[MIT](LICENSE) © [Titus Kirch](https://github.com/TitusKirch/) / [IT-Dienstleistungen Titus Kirch](https://kirch.dev)`. Use GitHub callouts (`> [!TIP]`, `> [!IMPORTANT]`), never plain blockquotes.
-
-## When editing this template
-
-- Every file referencing `TitusKirch/scaffold` is a placeholder that downstream users will replace. Keep the references consistent so a single `grep -rn "TitusKirch/scaffold"` catches them all.
-- `forgemap` (sibling repo at `../forgemap`) is the de-facto reference implementation of these conventions. When unsure about a config choice, check what forgemap does.
-- The template's own `package.json` is `"private": true` and `"name": "scaffold"` — not published anywhere.

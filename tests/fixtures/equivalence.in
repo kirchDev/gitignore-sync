@@ -1,0 +1,14 @@
+# region gitignore-sync
+# stacks: core
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# endregion
+
+.idea
+.idea/
+/.idea

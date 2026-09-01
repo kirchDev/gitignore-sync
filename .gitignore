@@ -1,6 +1,50 @@
-node_modules
+# region gitignore-sync
+# stacks: core, git, node, vscode, intellij
+# ─────────────────────────────────────────
+
+# region core@v1
 .DS_Store
-.idea
+.claude/settings.local.json
+# endregion
+
+# region git@v1
+*.orig
+*.rej
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*_BACKUP_*.txt
+*_BASE_*.txt
+*_LOCAL_*.txt
+*_REMOTE_*.txt
+# endregion
+
+# region node@v1
+node_modules
+dist
+coverage
+logs
+*.log
+*.tsbuildinfo
+.eslintcache
+.npm
+*.tgz
+# endregion
+
+# region vscode@v1
 .vscode/*
 !.vscode/extensions.json
-.claude/settings.local.json
+!.vscode/settings.json
+!.vscode/mcp.json
+# endregion
+
+# region intellij@v1
+.idea/*
+# endregion
+
+# endregion
+
+# Scratch: collected .gitignore files from the estate, used to measure
+# template coverage. Never shipped.
+tmp

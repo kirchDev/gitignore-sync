@@ -1,0 +1,17 @@
+# region gitignore-sync
+# stacks: core
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# endregion
+
+# Laravel Octane, installed by hand
+frankenphp
+/bootstrap/ssr
+
+# Never commit the signing key
+/storage/*.key

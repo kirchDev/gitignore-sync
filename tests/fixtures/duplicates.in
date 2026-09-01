@@ -1,0 +1,22 @@
+# region gitignore-sync
+# stacks: core, node
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+.claude/settings.local.json
+# endregion
+
+# region node@v1
+node_modules
+dist
+coverage
+# endregion
+
+# endregion
+
+node_modules
+frankenphp
+frankenphp
+.DS_Store
+/storage/*.key
