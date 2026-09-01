@@ -176,6 +176,28 @@ Deliberate omissions, each for a reason worth keeping:
 
 **Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo.
 
+### Sub-`.gitignore`s: three kinds, three verdicts
+
+git reads a `.gitignore` in every directory, so a repository has more than one. `src/discover.ts` classifies what it finds, and only one kind is a decision:
+
+| Kind        | Recognised by                                 | What happens                       |
+| :---------- | :--------------------------------------------- | :--------------------------------- |
+| `managed`   | it carries a `# region gitignore-sync`        | checked by `check --recursive`     |
+| `keeper`    | **content**: a `*` plus `!.gitignore`         | skipped — it holds an empty dir    |
+| `framework` | **path**: under `storage/`, `bootstrap/cache/`, `.husky/` | skipped — the framework owns it |
+| `plain`     | everything else                                | measured by `audit --recursive`    |
+
+A keeper is recognised by what it says, not where it sits, so the idiom holds for any framework that uses it. A framework stub needs the path, and that path is matched at **any** position: `services/core/storage/logs` in a monorepo counts as readily as a root `storage/logs`. `--include-stubs` measures them anyway.
+
+**A recursive scan must not walk into generated output**, and the skip list comes from two places rather than a hand-kept list:
+
+- **the templates** — a stack that ignores a build directory is a stack whose output must not be scanned, so `node_modules`, `dist`, `.turbo` and the rest maintain themselves. Only a *bare* name qualifies: taking the last segment of `/public/build` would skip every `build/` in the tree, and of `/public/storage` every Laravel stub the scan is meant to find.
+- **the repository's own `.gitignore`, inherited downwards** — a directory the repo ignores is generated, so the scan has no business there, exactly as git has none. This is what catches output no template knows: `event-management`'s `.stryker-tmp/` held two full copies of the repo and tripled every number until this rule landed.
+
+A directory holding its own `.git` is skipped too: a submodule or an agent worktree is a separate repository, and `app`'s four worktrees otherwise multiplied the report fivefold.
+
+**Most sub-files should not exist.** A root `.gitignore` applies recursively, so `apps/web/.gitignore` repeating `.nuxt` and `node_modules` says nothing the root does not — `gildstone`'s `apps/web` and `packages/ui` differ by a single line. A sub-file earns its place only when a pattern must apply to one subtree and not another. Neither `init` nor `sync` ever walks the tree; where a package genuinely needs its own region, point them at it (`gitignore-sync init apps/web --stacks=node,nuxt`).
+
 ### Templates carry their version history
 
 `src/templates/index.ts` keeps **every version a stack has ever shipped**, ascending. Reconciling reads the version the section marker names, so upgrading `node@v1` to `node@v2` knows which lines it put there itself and which the user added. Without that history an upgrade would "rescue" its own dropped lines into the free zone. When you change a template, **add a version — never edit one in place.**

@@ -47,6 +47,7 @@ gitignore-sync check            # CI gate: non-zero on drift
 gitignore-sync list             # what this binary ships, and what you declare
 gitignore-sync info             # which build is running, and what it sees
 gitignore-sync audit ../*/      # how much of a whole estate the stacks cover
+gitignore-sync check -r         # every managed region in the tree, not just the root
 ```
 
 Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positional elsewhere), and every writing command takes `--dry-run`.
@@ -156,6 +157,9 @@ There is also an action, for a job summary on failure and a `status` output:
   with:
     version: '0.1.0'   # pin it, so a release cannot turn a green pipeline red
 ```
+
+> [!NOTE]
+> `--recursive` on `audit` and `check` walks the whole tree, skipping build output, dependencies, nested repositories, and anything the repo's own `.gitignore` names. Laravel's `storage/` stubs and other directory keepers (`*` plus `!.gitignore`) are listed as skipped rather than measured — the framework owns them.
 
 > [!TIP]
 > Repos whose CI derives its task list from `package.json` need neither — add
