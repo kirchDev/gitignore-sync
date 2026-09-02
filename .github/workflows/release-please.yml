@@ -10,84 +10,29 @@ on:
       # itself is gated to the release branch below.
       - dev
 
-permissions:
-  contents: write
-  pull-requests: write
-
+# PERMISSIONS PER JOB, NOT PER WORKFLOW: a workflow-level block caps every
+# called body, and the publish jobs need `id-token: write` for npm's Trusted
+# Publishing — a cap makes the run fail at startup rather than at that step.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   release-please:
-    name: Run release-please
-    runs-on: ubuntu-latest
+    name: Release Please
+    # `dev` reaches this workflow for the prerelease job below; release-please
+    # itself only ever runs on the release branch.
     if: github.ref_name == 'main'
-    # Step outputs are invisible to other jobs, so the publish job below could
-    # never learn whether a release was cut without lifting them here.
-    outputs:
-      release-created: ${{ steps.release.outputs.release_created }}
-      tag-name: ${{ steps.release.outputs.tag_name }}
-    steps:
-      - name: Fetch Release App PEM from Bitwarden
-        uses: bitwarden/sm-action@1238aae8fc64b212641190a9227c8a734ab1a793 # v3.0.1
-        with:
-          access_token: ${{ secrets.BWS_ACCESS_TOKEN }}
-          cloud_region: eu
-          secrets: |
-            3a3459f0-c986-4ff3-a36b-b4550012d41e > KIRCHDEV_RELEASE_APP_PEM
-
-      - name: Mint Release App token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: 'Iv23li3hNqtsZ8fDlwqH'
-          private-key: ${{ env.KIRCHDEV_RELEASE_APP_PEM }}
-
-      - id: release
-        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-      # release-please cuts exact tags only — `v0.1.0`, never `v0`. This repo
-      # ships a composite action consumed as `kirchDev/gitignore-sync@<ref>`, so
-      # the moving alias is what lets a caller follow the v0 line without a bump
-      # PR for every patch — exactly how `actions/checkout@v7` behaves.
-      #
-      # FORCED ON PURPOSE. Moving a tag is normally the thing not to do, and an
-      # alias is the one case where moving it IS the contract: the tag names a
-      # major line, not a release. The exact tags it points at are never touched.
-      - name: Move the major alias
-        if: steps.release.outputs.release_created == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          GH_REPO: ${{ github.repository }}
-          TAG: ${{ steps.release.outputs.tag_name }}
-          SHA: ${{ steps.release.outputs.sha }}
-        run: |
-          set -euo pipefail
-
-          if [ -z "${TAG:-}" ] || [ -z "${SHA:-}" ]; then
-            echo "::warning::release-please reported a release without a tag or sha — no alias moved."
-            exit 0
-          fi
-
-          # v1.2.3 -> v1, and 0.x keeps its own line as v0: a 0.x major is not
-          # stable, so callers who want it must ask for it by name.
-          alias="v${TAG#v}"
-          alias="${alias%%.*}"
-
-          if gh api "repos/$GH_REPO/git/ref/tags/$alias" > /dev/null 2>&1; then
-            gh api -X PATCH "repos/$GH_REPO/git/refs/tags/$alias" \
-              -f "sha=$SHA" -F force=true > /dev/null
-            echo "::notice::Moved $alias to $TAG ($SHA)."
-          else
-            gh api -X POST "repos/$GH_REPO/git/refs" \
-              -f "ref=refs/tags/$alias" -f "sha=$SHA" > /dev/null
-            echo "::notice::Created $alias at $TAG ($SHA)."
-          fi
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: kirchDev/workflows/.github/workflows/_release-please.yml@b7bc3408448d1c0c1266e8c5fe2788c9cf120790 # v0.5.0
+    with:
+      # This package is consumed as `kirchDev/gitignore-sync@<ref>`, so `@v0`
+      # has to keep meaning "the newest v0.x.y".
+      major-alias: true
+    secrets:
+      BWS_ACCESS_TOKEN: ${{ secrets.BWS_ACCESS_TOKEN }}
 
   publish-release:
     name: Publish stable release
@@ -102,7 +47,7 @@ jobs:
     # `build-script` is left at its default: this repo's `build` writes the npm
     # artifact itself. coverage-report needs `build:npm` there only because its
     # `build` produces an Action bundle instead.
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@bec834b87a96c8c1dbf2c7cb28f774e9173e32d7 # v0.2.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@b7bc3408448d1c0c1266e8c5fe2788c9cf120790 # v0.5.0
     with:
       tag-name: ${{ needs.release-please.outputs.tag-name }}
 
@@ -122,6 +67,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@bec834b87a96c8c1dbf2c7cb28f774e9173e32d7 # v0.2.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@b7bc3408448d1c0c1266e8c5fe2788c9cf120790 # v0.5.0
     with:
       prerelease: true
