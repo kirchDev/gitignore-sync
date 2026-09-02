@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.4.0](https://github.com/kirchDev/gitignore-sync/compare/v0.3.1...v0.4.0) (2026-09-02)
+
+
+### Features
+
+* **ci:** call the central workflow bodies instead of copying them ([3b3b862](https://github.com/kirchDev/gitignore-sync/commit/3b3b862fa998c10e7ba92595996a74584df038e0))
+
+
+### Bug Fixes
+
+* **ci:** bump the workflow bodies to v0.1.3 ([b4e5173](https://github.com/kirchDev/gitignore-sync/commit/b4e51734888fd4309504ef47061eea7f69860022))
+* **ci:** pin the publish body to the v0.1.0 SHA ([b40a3ba](https://github.com/kirchDev/gitignore-sync/commit/b40a3baffd129a0d882b38cc5cc05d8fd49d2f05))
+* **ci:** pin the workflow bodies to v0.2.0 and drop paths-ignore ([c7f290a](https://github.com/kirchDev/gitignore-sync/commit/c7f290a86484ab69861f1dfb39b1eab70053fc0d))
+
 ## [0.3.1](https://github.com/kirchDev/gitignore-sync/compare/v0.3.0...v0.3.1) (2026-09-01)
 
 
