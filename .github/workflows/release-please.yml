@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-      # dev reaches this workflow for the prerelease job only; release-please
-      # itself is gated to the release branch below.
-      - dev
 
 # PERMISSIONS PER JOB, NOT PER WORKFLOW: a workflow-level block caps every
 # called body, and the publish jobs need `id-token: write` for npm's Trusted
@@ -20,8 +17,7 @@ concurrency:
 jobs:
   release-please:
     name: Release Please
-    # `dev` reaches this workflow for the prerelease job below; release-please
-    # itself only ever runs on the release branch.
+    # Release-please only ever runs on the release branch.
     if: github.ref_name == 'main'
     permissions:
       contents: write
@@ -57,12 +53,9 @@ jobs:
     # the stable release, and publishing a prerelease from them would shadow it.
     if: >-
       ${{
-        github.ref_name == 'dev'
-        || (
-          github.ref_name == 'main'
-          && !startsWith(github.event.head_commit.message, 'chore(main): release')
-          && !startsWith(github.event.head_commit.message, 'chore: release')
-        )
+        github.ref_name == 'main'
+        && !startsWith(github.event.head_commit.message, 'chore(main): release')
+        && !startsWith(github.event.head_commit.message, 'chore: release')
       }}
     permissions:
       contents: read
