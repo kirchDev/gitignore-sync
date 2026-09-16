@@ -40,6 +40,20 @@ const registry: Record<string, Template[]> = {
       stack: 'agents',
       version: 1,
       lines: ['.claude/settings.local.json', '.claude/worktrees/']
+    },
+    // v2: `.codex/config.toml` as written by Laravel Boost's `boost:install`
+    // carries one machine's absolute paths (`wsl.exe`, `/root/projects/…`).
+    // Both repos in the estate that commit the file (`app`, `gildstone`)
+    // committed exactly that, and none commits a shared one. Only the file:
+    // `.codex/rules/` stays committed wherever it is.
+    {
+      stack: 'agents',
+      version: 2,
+      lines: [
+        '.claude/settings.local.json',
+        '.claude/worktrees/',
+        '.codex/config.toml'
+      ]
     }
   ],
   // Conflict and backup droppings every git repo can produce. Fingerprinted on
@@ -128,13 +142,37 @@ const registry: Record<string, Template[]> = {
       stack: 'php',
       version: 1,
       lines: ['/vendor', '/.phpunit.cache', '/.phpunit.result.cache']
+    },
+    // v2 follows what the Laravel skeleton writes for Composer and PHP tooling,
+    // in its spelling, so a fresh `laravel new` is absorbed rather than reported
+    // as equivalent spellings:
+    // - `auth.json` holds Composer's registry credentials (private Packagist,
+    //   GitHub tokens). A leaked token is worth a line in every PHP repo, which
+    //   is why it sits here and not in `laravel`.
+    // - `.phpunit.result.cache` unanchored, as PHPUnit writes it wherever the
+    //   suite runs from.
+    // - `.phpactor.json` is one developer's language-server settings.
+    // - `/.phpstan.cache` is the kirchDev convention for PHPStan's `tmpDir`
+    //   (`gildstone`, `mc-network`); PHPStan has no fixed default, so a repo
+    //   that points `tmpDir` elsewhere simply never produces the path.
+    {
+      stack: 'php',
+      version: 2,
+      lines: [
+        '/vendor',
+        '/.phpunit.cache',
+        '.phpunit.result.cache',
+        '/auth.json',
+        '.phpactor.json',
+        '/.phpstan.cache'
+      ]
     }
   ],
-  // `/storage/pail` is deliberately absent, and so is every other `storage/`
-  // subdirectory: Laravel commits a directory keeper in each of them (`*` plus
-  // `!.gitignore`), which already ignores their contents. Repeating the path
-  // here would ignore the keeper itself — the same defect a bare `.vscode`
-  // causes, only self-inflicted. Found by running the rollout against `app`.
+  // Every committed `storage/` subdirectory is deliberately absent: Laravel
+  // commits a directory keeper in each of them (`*` plus `!.gitignore`), which
+  // already ignores their contents. Repeating the path here would ignore the
+  // keeper itself — the same defect a bare `.vscode` causes, only
+  // self-inflicted. Found by running the rollout against `app`.
   laravel: [
     {
       stack: 'laravel',
@@ -148,6 +186,54 @@ const registry: Record<string, Template[]> = {
         '_ide_helper.php',
         '_ide_helper_models.php',
         '.phpstorm.meta.php'
+      ]
+    },
+    // v2 catches up with the Laravel 13 skeleton's own `.gitignore`:
+    // - `/storage/pail` is the one `storage/` path that belongs here. Nothing is
+    //   committed there: `pail` creates the directory and its keeper at runtime,
+    //   so without the line that keeper shows up as an untracked file after the
+    //   first `pail`, instead of never being seen.
+    // - `/public/fonts-manifest.dev.json` is written by the skeleton's Vite font
+    //   plugin in dev mode.
+    // - `Homestead.json` / `Homestead.yaml` are written by `homestead make` with
+    //   one machine's paths.
+    {
+      stack: 'laravel',
+      version: 2,
+      lines: [
+        '/public/build',
+        '/public/hot',
+        '/public/storage',
+        '/public/fonts-manifest.dev.json',
+        '/storage/*.key',
+        '/storage/pail',
+        '/bootstrap/ssr',
+        '_ide_helper.php',
+        '_ide_helper_models.php',
+        '.phpstorm.meta.php',
+        'Homestead.json',
+        'Homestead.yaml'
+      ]
+    }
+  ],
+  // Exactly what `octane:install` appends to `.gitignore`, spelled the way it
+  // appends it: FrankenPHP's downloaded binary, its worker script and Caddy's
+  // state, and RoadRunner's binary and generated config. Kept verbatim so the
+  // installer's lines are absorbed rather than reported as equivalent
+  // spellings, and so a re-run of the installer (which checks for the exact
+  // line) adds nothing. Named after Octane, not a server: which server a repo
+  // picks is configuration, the files are Octane's. Found in `app`,
+  // `gildstone` and `mc-network`.
+  octane: [
+    {
+      stack: 'octane',
+      version: 1,
+      lines: [
+        '**/caddy',
+        'frankenphp',
+        'frankenphp-worker.php',
+        'rr',
+        '.rr.yaml'
       ]
     }
   ],

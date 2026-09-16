@@ -134,6 +134,7 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `turborepo`  | `turbo.json`                       |     3 |
 | `tofu`       | `*.tf` / `*.tofu` / lock file      |     1 |
 | `laravel`    | `artisan`                          |     1 |
+| `octane`     | `config/octane.php`                |     3 |
 | `nuxt`       | `nuxt.config.*`                    |     1 |
 | `tauri`      | `src-tauri/`                       |     1 |
 | `storybook`  | `.storybook/`                      |     1 |
@@ -168,6 +169,8 @@ What the brief said stays true, just narrower than the old prompt copy implied: 
 
 Deliberate omissions, each for a reason worth keeping:
 
+- **`octane` carries the installer's spellings verbatim** (`frankenphp`, not `/frankenphp`). `octane:install` appends its lines unless the exact line is already there, so a template in its own spelling absorbs them and a re-run adds nothing. It is named after Octane rather than a server: the server is configuration, the files are Octane's.
+- **`php@v2` and `laravel@v2` follow the Laravel 13 skeleton's own `.gitignore`, in its spelling**, so a fresh `laravel new` is absorbed instead of reported as equivalent spellings. `/auth.json` (Composer's registry credentials), `.phpactor.json` and `/.phpstan.cache` sit in `php`, not `laravel`: any Composer project has them. `/.phpstan.cache` is a kirchDev convention for PHPStan's `tmpDir` rather than a PHPStan default — `app` still writes to `build/phpstan`, where the line is simply inert. `laravel@v2` adds `/public/fonts-manifest.dev.json`, `Homestead.json`/`.yaml` and `/storage/pail` — the one `storage/` path a template may name, because nothing is committed there: `pail` creates the directory and its keeper at runtime, and without the line that keeper appears as an untracked file. The skeleton's editor and agent lines (`/.codex`, `/.cursor/`, `/.nova`, `/.zed`) are deliberately **not** in either: the estate commits `.codex/` and agent config, and the editors are machine stacks.
 - **`composer.lock` is in no template.** A library ignores it, an application commits it — a project decision, so it belongs in the free zone.
 - **The JVM stack is `gradle`, not `java`.** What a JVM repo ignores follows the build tool — Gradle writes `build/`, Maven `target/` — so a `java` stack would render lines pointing at nothing in half the repos. `*.jar` is left out because the Gradle wrapper jar is committed. A `maven` stack waits until a repo needs one.
 - **`dist` belongs to `node` alone**, not to `go`. goreleaser writes there too, but a line may live in only one stack (below), and `node` claims it.
@@ -188,10 +191,10 @@ git reads a `.gitignore` in every directory, so a repository has more than one. 
 | :---------- | :--------------------------------------------- | :--------------------------------- |
 | `managed`   | it carries a `# region gitignore-sync`        | checked by `check --recursive`     |
 | `keeper`    | **content**: a `*` plus `!.gitignore`         | skipped — it holds an empty dir    |
-| `framework` | **path**: under `storage/`, `bootstrap/cache/`, `.husky/` | skipped — the framework owns it |
+| `framework` | **path**: under `storage/`, `bootstrap/cache/`, `.husky/` — or Laravel's `database/.gitignore` holding exactly `*.sqlite*` | skipped — the framework owns it |
 | `plain`     | everything else                                | measured by `audit --recursive`    |
 
-A keeper is recognised by what it says, not where it sits, so the idiom holds for any framework that uses it. A framework stub needs the path, and that path is matched at **any** position: `services/core/storage/logs` in a monorepo counts as readily as a root `storage/logs`. `--include-stubs` measures them anyway.
+A keeper is recognised by what it says, not where it sits, so the idiom holds for any framework that uses it. A framework stub needs the path, and that path is matched at **any** position: `services/core/storage/logs` in a monorepo counts as readily as a root `storage/logs`. Laravel's `database/.gitignore` is the one stub that needs its content too: a bare `database/` path would claim a repository's own file, so only the skeleton's exact `*.sqlite*` counts. `--include-stubs` measures them anyway.
 
 **A recursive scan must not walk into generated output**, and the skip list comes from two places rather than a hand-kept list:
 
@@ -206,7 +209,7 @@ A directory holding its own `.git` is skipped too: a submodule or an agent workt
 
 `src/templates/index.ts` keeps **every version a stack has ever shipped**, ascending. Reconciling reads the version the section marker names, so upgrading `node@v1` to `node@v2` knows which lines it put there itself and which the user added. Without that history an upgrade would "rescue" its own dropped lines into the free zone. When you change a template, **add a version — never edit one in place.**
 
-**That rule is checked, not trusted.** `tests/templates.lock.json` holds every locked version with its lines, and `tests/templates.lock.test.ts` fails when one of them changes. Editing `node@v1` in place therefore cannot reach `main` unless someone also runs `pnpm templates:lock` — which shows up as a diff on the lock, and that diff is the thing a reviewer has to be asked about. Adding a *new* version needs no re-run (the test only guards what the lock already knows), but run it anyway so the next change is guarded too.
+**That rule is checked, not trusted.** `tests/templates.lock.json` holds every locked version with its lines, and `tests/templates.lock.test.ts` fails when one of them changes. Editing `node@v1` in place therefore cannot reach `main` unless someone also runs `pnpm templates:lock` — which shows up as a diff on the lock, and that diff is the thing a reviewer has to be asked about. Adding a *new* version needs no re-run (the test only guards what the lock already knows), but run it anyway so the next change is guarded too. The script locks **every** version still in the registry, not only the current one — `php@v1` stays guarded after `php@v2` ships, because `reconcile` still reads it. It writes plain JSON; run `oxfmt` over the lock afterwards.
 
 The history grows, slowly. Dropping a very old version is allowed and degrades safely: `reconcile` falls back to the current template, which means it rescues more than it needs to rather than deleting something it shouldn't.
 
@@ -216,7 +219,7 @@ Four template rules that are not style:
 
 - **Never a bare `.vscode/` or `.idea/`.** git does not descend into an ignored directory, which makes `!` exceptions under it technically impossible. Always `.vscode/*` plus targeted exceptions.
 - **The `!` exceptions are the files the estate actually tracks**, measured, not guessed: `extensions.json` (every repo that shares anything), `settings.json` (seven), `mcp.json` (two). `tasks.json` and `*.code-snippets`, which the toptal block unignores, are tracked by no repo at all. No repo tracks any `.idea` content, so `intellij` ships no exceptions.
-- **`agents` carries working files, not configuration.** Across the estate **126 files** under `.claude/`, `.codex/` and `.opencode/` are committed — `settings.json`, skills, `default.rules`, agent definitions. Only `settings.local.json` and `worktrees/` describe one machine, and only those two are in the block. `.claude/worktrees/` is included because it accumulates for real and the one repo that ignores it today does so in `.git/info/exclude` — private knowledge that belongs where the team can see it.
+- **`agents` carries working files, not configuration.** Across the estate **126 files** under `.claude/`, `.codex/` and `.opencode/` are committed — `settings.json`, skills, `default.rules`, agent definitions. Only `settings.local.json` and `worktrees/` describe one machine, and only those two are in `agents@v1`. `agents@v2` adds `.codex/config.toml`: Laravel Boost writes it with absolute paths of the machine it ran on, and both repos that commit one (`app`, `gildstone`) committed exactly that — the file, not the directory, so `.codex/rules/` stays committable. `.claude/worktrees/` is included because it accumulates for real and the one repo that ignores it today does so in `.git/info/exclude` — private knowledge that belongs where the team can see it.
 - **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
 
 ### Two surfaces, one tool

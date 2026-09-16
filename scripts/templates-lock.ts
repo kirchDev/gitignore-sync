@@ -15,12 +15,22 @@
  */
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { currentTemplate, stackOrder } from '../src/templates/index.ts';
+import {
+  currentTemplate,
+  stackOrder,
+  templateAt
+} from '../src/templates/index.ts';
 
 const lock: Record<string, string[]> = {};
+// Every version, not only the current one: a stack's older versions stay in the
+// registry so `reconcile` can read what a section put there itself, and a
+// version that is still read must stay guarded after its successor ships.
 for (const stack of stackOrder()) {
-  const template = currentTemplate(stack);
-  if (template) lock[`${stack}@v${template.version}`] = template.lines;
+  const current = currentTemplate(stack)?.version ?? 0;
+  for (let version = 1; version <= current; version++) {
+    const template = templateAt(stack, version);
+    if (template) lock[`${stack}@v${template.version}`] = template.lines;
+  }
 }
 
 const path = join(import.meta.dirname, '..', 'tests', 'templates.lock.json');

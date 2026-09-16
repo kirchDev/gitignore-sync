@@ -36,6 +36,13 @@ describe('detect', () => {
     );
   });
 
+  it('fingerprints octane from its published config', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'config'));
+    writeFileSync(join(dir, 'config', 'octane.php'), '');
+    expect(names(dir)).toContain('octane');
+  });
+
   it('fingerprints gradle from a build script one level down', () => {
     const dir = fresh();
     mkdirSync(join(dir, 'apps'));

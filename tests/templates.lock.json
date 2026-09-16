@@ -1,6 +1,11 @@
 {
   "core@v1": [".DS_Store"],
   "agents@v1": [".claude/settings.local.json", ".claude/worktrees/"],
+  "agents@v2": [
+    ".claude/settings.local.json",
+    ".claude/worktrees/",
+    ".codex/config.toml"
+  ],
   "git@v1": [
     "*.orig",
     "*.rej",
@@ -39,6 +44,14 @@
     "crash.*.log"
   ],
   "php@v1": ["/vendor", "/.phpunit.cache", "/.phpunit.result.cache"],
+  "php@v2": [
+    "/vendor",
+    "/.phpunit.cache",
+    ".phpunit.result.cache",
+    "/auth.json",
+    ".phpactor.json",
+    "/.phpstan.cache"
+  ],
   "laravel@v1": [
     "/public/build",
     "/public/hot",
@@ -48,6 +61,27 @@
     "_ide_helper.php",
     "_ide_helper_models.php",
     ".phpstorm.meta.php"
+  ],
+  "laravel@v2": [
+    "/public/build",
+    "/public/hot",
+    "/public/storage",
+    "/public/fonts-manifest.dev.json",
+    "/storage/*.key",
+    "/storage/pail",
+    "/bootstrap/ssr",
+    "_ide_helper.php",
+    "_ide_helper_models.php",
+    ".phpstorm.meta.php",
+    "Homestead.json",
+    "Homestead.yaml"
+  ],
+  "octane@v1": [
+    "**/caddy",
+    "frankenphp",
+    "frankenphp-worker.php",
+    "rr",
+    ".rr.yaml"
   ],
   "turborepo@v1": [".turbo"],
   "rust@v1": ["/target", "**/*.rs.bk"],
