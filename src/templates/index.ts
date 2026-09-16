@@ -171,6 +171,20 @@ const registry: Record<string, Template[]> = {
       lines: ['/target', '**/*.rs.bk']
     }
   ],
+  // Gradle's build output, not "Java": what a JVM repo ignores follows the
+  // build tool, and Maven writes to `target/` instead. `build/` is unanchored
+  // because every subproject gets its own. No `*.jar` — the wrapper jar under
+  // `gradle/wrapper/` is committed, and toptal's block would swallow a new one.
+  // `.kotlin/` is the Kotlin Gradle plugin's cache, written for `.kts` scripts
+  // too. One repo in the estate, `mc-network`, keeps its build in
+  // `apps/minecraft/`.
+  gradle: [
+    {
+      stack: 'gradle',
+      version: 1,
+      lines: ['.gradle/', '.kotlin/', 'build/']
+    }
+  ],
   playwright: [
     {
       stack: 'playwright',
