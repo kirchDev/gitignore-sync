@@ -1,0 +1,26 @@
+# region gitignore-sync
+# stacks: core, php, octane
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+# endregion
+
+# region php@v2
+/vendor
+/.phpunit.cache
+.phpunit.result.cache
+/auth.json
+.phpactor.json
+/.phpstan.cache
+# endregion
+
+# region octane@v1
+**/caddy
+frankenphp
+frankenphp-worker.php
+rr
+.rr.yaml
+# endregion
+
+# endregion

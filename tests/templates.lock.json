@@ -71,6 +71,13 @@
     "Homestead.json",
     "Homestead.yaml"
   ],
+  "octane@v1": [
+    "**/caddy",
+    "frankenphp",
+    "frankenphp-worker.php",
+    "rr",
+    ".rr.yaml"
+  ],
   "turborepo@v1": [".turbo"],
   "rust@v1": ["/target", "**/*.rs.bk"],
   "gradle@v1": [".gradle/", ".kotlin/", "build/"],

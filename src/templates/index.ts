@@ -202,6 +202,27 @@ const registry: Record<string, Template[]> = {
       ]
     }
   ],
+  // Exactly what `octane:install` appends to `.gitignore`, spelled the way it
+  // appends it: FrankenPHP's downloaded binary, its worker script and Caddy's
+  // state, and RoadRunner's binary and generated config. Kept verbatim so the
+  // installer's lines are absorbed rather than reported as equivalent
+  // spellings, and so a re-run of the installer (which checks for the exact
+  // line) adds nothing. Named after Octane, not a server: which server a repo
+  // picks is configuration, the files are Octane's. Found in `app`,
+  // `gildstone` and `mc-network`.
+  octane: [
+    {
+      stack: 'octane',
+      version: 1,
+      lines: [
+        '**/caddy',
+        'frankenphp',
+        'frankenphp-worker.php',
+        'rr',
+        '.rr.yaml'
+      ]
+    }
+  ],
   // Three repos in the estate run turbo (`oggsbreinig`, `gildstone`, and the
   // campus monorepo); all three ignore its cache.
   turborepo: [

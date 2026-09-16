@@ -80,6 +80,8 @@ const fingerprints: Record<string, Fingerprint> = {
   storybook: { source: 'repo', files: ['.storybook'] },
   php: { source: 'repo', files: ['composer.json'] },
   laravel: { source: 'repo', files: ['artisan'] },
+  // Published by `octane:install`, whichever server the repo picks.
+  octane: { source: 'repo', files: ['config/octane.php'] },
   go: { source: 'repo', files: ['go.mod'] },
   tofu: {
     source: 'repo',
