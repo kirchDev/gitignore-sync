@@ -1,6 +1,11 @@
 {
   "core@v1": [".DS_Store"],
   "agents@v1": [".claude/settings.local.json", ".claude/worktrees/"],
+  "agents@v2": [
+    ".claude/settings.local.json",
+    ".claude/worktrees/",
+    ".codex/config.toml"
+  ],
   "git@v1": [
     "*.orig",
     "*.rej",

@@ -40,6 +40,20 @@ const registry: Record<string, Template[]> = {
       stack: 'agents',
       version: 1,
       lines: ['.claude/settings.local.json', '.claude/worktrees/']
+    },
+    // v2: `.codex/config.toml` as written by Laravel Boost's `boost:install`
+    // carries one machine's absolute paths (`wsl.exe`, `/root/projects/…`).
+    // Both repos in the estate that commit the file (`app`, `gildstone`)
+    // committed exactly that, and none commits a shared one. Only the file:
+    // `.codex/rules/` stays committed wherever it is.
+    {
+      stack: 'agents',
+      version: 2,
+      lines: [
+        '.claude/settings.local.json',
+        '.claude/worktrees/',
+        '.codex/config.toml'
+      ]
     }
   ],
   // Conflict and backup droppings every git repo can produce. Fingerprinted on
