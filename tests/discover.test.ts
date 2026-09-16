@@ -124,6 +124,26 @@ describe('findGitignores', () => {
     );
   });
 
+  it("labels Laravel's database stub by path and content, nested or not", () => {
+    const root = fresh();
+    write(root, '.', 'node_modules\n');
+    write(root, 'database', '*.sqlite*\n');
+    write(root, 'services/core/database', '*.sqlite*\n');
+    const found = kinds(root);
+    expect(found['database/.gitignore']).toBe('framework');
+    expect(found['services/core/database/.gitignore']).toBe('framework');
+  });
+
+  it('keeps a hand-written database/.gitignore plain', () => {
+    const root = fresh();
+    write(root, '.', 'node_modules\n');
+    write(root, 'database', '*.sqlite*\ndumps/\n');
+    write(root, 'other', '*.sqlite*\n');
+    const found = kinds(root);
+    expect(found['database/.gitignore']).toBe('plain');
+    expect(found['other/.gitignore']).toBe('plain');
+  });
+
   it('never descends into dependency or build output', () => {
     const root = fresh();
     write(root, '.', 'node_modules\n');

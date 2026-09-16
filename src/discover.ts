@@ -79,6 +79,27 @@ const FRAMEWORK_PATHS = [
   '.husky' // husky
 ];
 
+/**
+ * Laravel's `database/.gitignore`, recognised by path **and** content: the
+ * skeleton ships it holding exactly `*.sqlite*`. A path alone would claim any
+ * repository's own `database/.gitignore`, which is somebody's decision rather
+ * than a framework's stub.
+ */
+const LARAVEL_DATABASE_STUB = ['*.sqlite*'];
+
+const isLaravelDatabaseStub = (rel: string, text: string): boolean => {
+  const dir = rel.slice(0, rel.lastIndexOf('/'));
+  if (dir !== 'database' && !dir.endsWith('/database')) return false;
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '' && !l.startsWith('#'));
+  return (
+    lines.length === LARAVEL_DATABASE_STUB.length &&
+    lines.every((l, i) => l === LARAVEL_DATABASE_STUB[i])
+  );
+};
+
 const underFrameworkPath = (rel: string): boolean => {
   const dir = rel.slice(0, rel.lastIndexOf('/') + 1);
   return FRAMEWORK_PATHS.some(
@@ -111,7 +132,9 @@ function classify(file: string, rel: string): FoundKind {
   }
   if (/^#\s*region\s+gitignore-sync\s*$/m.test(text)) return 'managed';
   if (isDirectoryKeeper(text)) return 'keeper';
-  if (underFrameworkPath(rel)) return 'framework';
+  if (underFrameworkPath(rel) || isLaravelDatabaseStub(rel, text)) {
+    return 'framework';
+  }
   return 'plain';
 }
 
