@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.4.0](https://github.com/kirchDev/gitignore-sync/compare/v0.3.1...v0.4.0) (2026-09-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* move to pnpm 12
+* this repository now requires pnpm 12.
+
+### Features
+
+* **ci:** call the central workflow bodies instead of copying them ([3b3b862](https://github.com/kirchDev/gitignore-sync/commit/3b3b862fa998c10e7ba92595996a74584df038e0))
+* **ci:** call the release-please body instead of the last local copy ([6e04e62](https://github.com/kirchDev/gitignore-sync/commit/6e04e62f2d6e374c2c5ae86f94b0eca8332a1825))
+* **templates:** add a gradle stack ([a1a6dfa](https://github.com/kirchDev/gitignore-sync/commit/a1a6dfaf494b31cdc342242d4770fef425997843))
+
+
+### Bug Fixes
+
+* **ci:** bump the workflow bodies to v0.1.3 ([b4e5173](https://github.com/kirchDev/gitignore-sync/commit/b4e51734888fd4309504ef47061eea7f69860022))
+* **ci:** pin the publish body to the v0.1.0 SHA ([b40a3ba](https://github.com/kirchDev/gitignore-sync/commit/b40a3baffd129a0d882b38cc5cc05d8fd49d2f05))
+* **ci:** pin the workflow bodies to v0.2.0 and drop paths-ignore ([c7f290a](https://github.com/kirchDev/gitignore-sync/commit/c7f290a86484ab69861f1dfb39b1eab70053fc0d))
+* **ci:** pin the workflow bodies to v0.5.0 ([ed4d410](https://github.com/kirchDev/gitignore-sync/commit/ed4d410fb044b3f71bf8f0e486e82de6e0e1b9ab))
+* **ci:** pin the workflow bodies to v0.7.0 ([82ed972](https://github.com/kirchDev/gitignore-sync/commit/82ed9729ca36b40c2eae35ebd9ca3650fc13e2f0))
+* **ci:** publish prereleases only from main ([8372668](https://github.com/kirchDev/gitignore-sync/commit/837266825ac63ec76608a66335aa7c1cbe128eea))
+* **config:** correct the codex policy match examples ([55aba23](https://github.com/kirchDev/gitignore-sync/commit/55aba23c47e54fc4b473729451b3f5434e21a546))
+
+
+### Reverts
+
+* go back to pnpm 11.25.0 ([097a03c](https://github.com/kirchDev/gitignore-sync/commit/097a03cdb357f820f89928578a6c5c66060d06e9))
+
+
+### Miscellaneous Chores
+
+* move to pnpm 12 ([590d1b7](https://github.com/kirchDev/gitignore-sync/commit/590d1b73c68fed0d918f1556179ca5e83ac94356))
+* move to pnpm 12 ([e13b740](https://github.com/kirchDev/gitignore-sync/commit/e13b7403a565c889a839812d868a4ba9ef441fa5))
+
 ## [0.3.1](https://github.com/kirchDev/gitignore-sync/compare/v0.3.0...v0.3.1) (2026-09-01)
 
 
