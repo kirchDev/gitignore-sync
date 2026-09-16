@@ -57,6 +57,20 @@
     "_ide_helper_models.php",
     ".phpstorm.meta.php"
   ],
+  "laravel@v2": [
+    "/public/build",
+    "/public/hot",
+    "/public/storage",
+    "/public/fonts-manifest.dev.json",
+    "/storage/*.key",
+    "/storage/pail",
+    "/bootstrap/ssr",
+    "_ide_helper.php",
+    "_ide_helper_models.php",
+    ".phpstorm.meta.php",
+    "Homestead.json",
+    "Homestead.yaml"
+  ],
   "turborepo@v1": [".turbo"],
   "rust@v1": ["/target", "**/*.rs.bk"],
   "gradle@v1": [".gradle/", ".kotlin/", "build/"],

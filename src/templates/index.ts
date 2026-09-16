@@ -154,11 +154,11 @@ const registry: Record<string, Template[]> = {
       ]
     }
   ],
-  // `/storage/pail` is deliberately absent, and so is every other `storage/`
-  // subdirectory: Laravel commits a directory keeper in each of them (`*` plus
-  // `!.gitignore`), which already ignores their contents. Repeating the path
-  // here would ignore the keeper itself — the same defect a bare `.vscode`
-  // causes, only self-inflicted. Found by running the rollout against `app`.
+  // Every committed `storage/` subdirectory is deliberately absent: Laravel
+  // commits a directory keeper in each of them (`*` plus `!.gitignore`), which
+  // already ignores their contents. Repeating the path here would ignore the
+  // keeper itself — the same defect a bare `.vscode` causes, only
+  // self-inflicted. Found by running the rollout against `app`.
   laravel: [
     {
       stack: 'laravel',
@@ -172,6 +172,33 @@ const registry: Record<string, Template[]> = {
         '_ide_helper.php',
         '_ide_helper_models.php',
         '.phpstorm.meta.php'
+      ]
+    },
+    // v2 catches up with the Laravel 13 skeleton's own `.gitignore`:
+    // - `/storage/pail` is the one `storage/` path that belongs here. Nothing is
+    //   committed there: `pail` creates the directory and its keeper at runtime,
+    //   so without the line that keeper shows up as an untracked file after the
+    //   first `pail`, instead of never being seen.
+    // - `/public/fonts-manifest.dev.json` is written by the skeleton's Vite font
+    //   plugin in dev mode.
+    // - `Homestead.json` / `Homestead.yaml` are written by `homestead make` with
+    //   one machine's paths.
+    {
+      stack: 'laravel',
+      version: 2,
+      lines: [
+        '/public/build',
+        '/public/hot',
+        '/public/storage',
+        '/public/fonts-manifest.dev.json',
+        '/storage/*.key',
+        '/storage/pail',
+        '/bootstrap/ssr',
+        '_ide_helper.php',
+        '_ide_helper_models.php',
+        '.phpstorm.meta.php',
+        'Homestead.json',
+        'Homestead.yaml'
       ]
     }
   ],
