@@ -137,6 +137,7 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `nuxt`       | `nuxt.config.*`                    |     1 |
 | `tauri`      | `src-tauri/`                       |     1 |
 | `storybook`  | `.storybook/`                      |     1 |
+| `gradle`     | `build.gradle*` / `settings.gradle*` |     1 |
 | `rust`       | a **root** `Cargo.toml`            |     0 |
 | `playwright` | `playwright.config.*`              |     0 |
 | `vscode`     | a `.vscode/` here *(machine)*      |     — |
@@ -168,6 +169,7 @@ What the brief said stays true, just narrower than the old prompt copy implied: 
 Deliberate omissions, each for a reason worth keeping:
 
 - **`composer.lock` is in no template.** A library ignores it, an application commits it — a project decision, so it belongs in the free zone.
+- **The JVM stack is `gradle`, not `java`.** What a JVM repo ignores follows the build tool — Gradle writes `build/`, Maven `target/` — so a `java` stack would render lines pointing at nothing in half the repos. `*.jar` is left out because the Gradle wrapper jar is committed. A `maven` stack waits until a repo needs one.
 - **`dist` belongs to `node` alone**, not to `go`. goreleaser writes there too, but a line may live in only one stack (below), and `node` claims it.
 - **`.terraform.lock.hcl` is not ignored** — it is meant to be committed.
 - **No `prisma` stack**, even though one repo ignores `src/generated/prisma/`. The path is configurable, so it is a project rule, and the free zone is exactly where it belongs.
@@ -193,7 +195,7 @@ A keeper is recognised by what it says, not where it sits, so the idiom holds fo
 
 **A recursive scan must not walk into generated output**, and the skip list comes from two places rather than a hand-kept list:
 
-- **the templates** — a stack that ignores a build directory is a stack whose output must not be scanned, so `node_modules`, `dist`, `.turbo` and the rest maintain themselves. Only a *bare* name qualifies: taking the last segment of `/public/build` would skip every `build/` in the tree, and of `/public/storage` every Laravel stub the scan is meant to find.
+- **the templates** — a stack that ignores a build directory is a stack whose output must not be scanned, so `node_modules`, `dist`, `.turbo` and the rest maintain themselves. Only a *bare* name qualifies: taking the last segment of `/public/build` would skip every `build/` in the tree, and of `/public/storage` every Laravel stub the scan is meant to find. (`build/` *is* skipped everywhere since `gradle` ignores it bare — Gradle output, accepted for that reason.)
 - **the repository's own `.gitignore`, inherited downwards** — a directory the repo ignores is generated, so the scan has no business there, exactly as git has none. This is what catches output no template knows: `event-management`'s `.stryker-tmp/` held two full copies of the repo and tripled every number until this rule landed.
 
 A directory holding its own `.git` is skipped too: a submodule or an agent worktree is a separate repository, and `app`'s four worktrees otherwise multiplied the report fivefold.

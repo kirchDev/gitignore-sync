@@ -53,17 +53,25 @@ describe('isDirectoryKeeper', () => {
 describe('skipDirectories', () => {
   it('derives the dependency and build directories from the templates', () => {
     const skip = skipDirectories();
-    for (const dir of ['node_modules', 'vendor', 'dist', 'coverage', '.git']) {
+    for (const dir of [
+      'node_modules',
+      'vendor',
+      'dist',
+      'coverage',
+      'build',
+      '.git'
+    ]) {
       expect(skip).toContain(dir);
     }
   });
 
-  // Taking the last segment of `/public/build` would skip every `build/`, and
-  // of `/public/storage` every `storage/` — including the stubs a scan should
-  // find and label.
+  // Taking the last segment of `/public/storage` would skip every `storage/` —
+  // including the stubs a scan should find and label. `build` is absent from
+  // the list on purpose: `gradle` ignores a bare `build/`, so it is skipped for
+  // that reason, not because `/public/build` leaked into the set.
   it('never turns a path pattern into a bare directory name', () => {
     const skip = skipDirectories();
-    for (const dir of ['storage', 'build', 'hot', 'ssr', 'schemas']) {
+    for (const dir of ['storage', 'hot', 'ssr', 'schemas']) {
       expect(skip).not.toContain(dir);
     }
   });

@@ -69,6 +69,10 @@ const fingerprints: Record<string, Fingerprint> = {
   turborepo: { source: 'repo', files: ['turbo.json'] },
   // Root `Cargo.toml` only — see the comment on the template.
   rust: { source: 'repo', files: ['Cargo.toml'] },
+  gradle: {
+    source: 'repo',
+    patterns: [/^(?:build|settings)\.gradle(?:\.kts)?$/]
+  },
   playwright: {
     source: 'repo',
     patterns: [/^playwright\.config\.[cm]?[jt]s$/]

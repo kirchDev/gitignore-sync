@@ -36,6 +36,13 @@ describe('detect', () => {
     );
   });
 
+  it('fingerprints gradle from a build script one level down', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'apps'));
+    writeFileSync(join(dir, 'apps', 'build.gradle.kts'), '');
+    expect(names(dir)).toContain('gradle');
+  });
+
   it('fingerprints dotenv from a committed .env.example', () => {
     const dir = fresh();
     writeFileSync(join(dir, '.env.example'), '');

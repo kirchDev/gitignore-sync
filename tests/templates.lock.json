@@ -51,6 +51,7 @@
   ],
   "turborepo@v1": [".turbo"],
   "rust@v1": ["/target", "**/*.rs.bk"],
+  "gradle@v1": [".gradle/", ".kotlin/", "build/"],
   "playwright@v1": [
     "test-results/",
     "playwright-report/",

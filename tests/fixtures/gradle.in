@@ -1,0 +1,13 @@
+# region gitignore-sync
+# stacks: core, gradle
+# ─────────────────────────────────────────
+
+# endregion
+
+# Gradle (apps/minecraft)
+.gradle/
+.kotlin/
+build/
+
+# Secrets (infra/.env)
+.env

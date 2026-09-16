@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-      # dev reaches this workflow for the prerelease job only; release-please
-      # itself is gated to the release branch below.
-      - dev
 
 # PERMISSIONS PER JOB, NOT PER WORKFLOW: a workflow-level block caps every
 # called body, and the publish jobs need `id-token: write` for npm's Trusted
@@ -20,13 +17,12 @@ concurrency:
 jobs:
   release-please:
     name: Release Please
-    # `dev` reaches this workflow for the prerelease job below; release-please
-    # itself only ever runs on the release branch.
+    # Release-please only ever runs on the release branch.
     if: github.ref_name == 'main'
     permissions:
       contents: write
       pull-requests: write
-    uses: kirchDev/workflows/.github/workflows/_release-please.yml@94cbcbd676b989ac6c6327055a240132f5cd76a5 # v0.8.0
+    uses: kirchDev/workflows/.github/workflows/_release-please.yml@1e57db95ff601f03ae87b78e329ef238f9d0cbf6 # v0.8.2
     with:
       # This package is consumed as `kirchDev/gitignore-sync@<ref>`, so `@v0`
       # has to keep meaning "the newest v0.x.y".
@@ -47,7 +43,7 @@ jobs:
     # `build-script` is left at its default: this repo's `build` writes the npm
     # artifact itself. coverage-report needs `build:npm` there only because its
     # `build` produces an Action bundle instead.
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@94cbcbd676b989ac6c6327055a240132f5cd76a5 # v0.8.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@1e57db95ff601f03ae87b78e329ef238f9d0cbf6 # v0.8.2
     with:
       tag-name: ${{ needs.release-please.outputs.tag-name }}
 
@@ -57,16 +53,13 @@ jobs:
     # the stable release, and publishing a prerelease from them would shadow it.
     if: >-
       ${{
-        github.ref_name == 'dev'
-        || (
-          github.ref_name == 'main'
-          && !startsWith(github.event.head_commit.message, 'chore(main): release')
-          && !startsWith(github.event.head_commit.message, 'chore: release')
-        )
+        github.ref_name == 'main'
+        && !startsWith(github.event.head_commit.message, 'chore(main): release')
+        && !startsWith(github.event.head_commit.message, 'chore: release')
       }}
     permissions:
       contents: read
       id-token: write
-    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@94cbcbd676b989ac6c6327055a240132f5cd76a5 # v0.8.0
+    uses: kirchDev/workflows/.github/workflows/_publish-npm.yml@1e57db95ff601f03ae87b78e329ef238f9d0cbf6 # v0.8.2
     with:
       prerelease: true

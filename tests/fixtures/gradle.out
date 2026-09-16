@@ -1,0 +1,18 @@
+# region gitignore-sync
+# stacks: core, gradle
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+# endregion
+
+# region gradle@v1
+.gradle/
+.kotlin/
+build/
+# endregion
+
+# endregion
+
+# Secrets (infra/.env)
+.env
