@@ -39,6 +39,14 @@
     "crash.*.log"
   ],
   "php@v1": ["/vendor", "/.phpunit.cache", "/.phpunit.result.cache"],
+  "php@v2": [
+    "/vendor",
+    "/.phpunit.cache",
+    ".phpunit.result.cache",
+    "/auth.json",
+    ".phpactor.json",
+    "/.phpstan.cache"
+  ],
   "laravel@v1": [
     "/public/build",
     "/public/hot",

@@ -128,6 +128,30 @@ const registry: Record<string, Template[]> = {
       stack: 'php',
       version: 1,
       lines: ['/vendor', '/.phpunit.cache', '/.phpunit.result.cache']
+    },
+    // v2 follows what the Laravel skeleton writes for Composer and PHP tooling,
+    // in its spelling, so a fresh `laravel new` is absorbed rather than reported
+    // as equivalent spellings:
+    // - `auth.json` holds Composer's registry credentials (private Packagist,
+    //   GitHub tokens). A leaked token is worth a line in every PHP repo, which
+    //   is why it sits here and not in `laravel`.
+    // - `.phpunit.result.cache` unanchored, as PHPUnit writes it wherever the
+    //   suite runs from.
+    // - `.phpactor.json` is one developer's language-server settings.
+    // - `/.phpstan.cache` is the kirchDev convention for PHPStan's `tmpDir`
+    //   (`gildstone`, `mc-network`); PHPStan has no fixed default, so a repo
+    //   that points `tmpDir` elsewhere simply never produces the path.
+    {
+      stack: 'php',
+      version: 2,
+      lines: [
+        '/vendor',
+        '/.phpunit.cache',
+        '.phpunit.result.cache',
+        '/auth.json',
+        '.phpactor.json',
+        '/.phpstan.cache'
+      ]
     }
   ],
   // `/storage/pail` is deliberately absent, and so is every other `storage/`
