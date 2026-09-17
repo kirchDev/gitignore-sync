@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.0](https://github.com/kirchDev/gitignore-sync/compare/v0.4.0...v0.5.0) (2026-09-16)
+
+
+### Features
+
+* **discover:** recognise laravel's database stub as a framework file ([6d281b2](https://github.com/kirchDev/gitignore-sync/commit/6d281b23b6ccde37a04dcfa52c72ec62dcf59fd1))
+* **templates:** add agents v2 ignoring boost's machine-specific codex config ([8867b20](https://github.com/kirchDev/gitignore-sync/commit/8867b2058f72bc4874278d5ebf9de4b5048d8d94))
+* **templates:** add an octane stack ([5b7335a](https://github.com/kirchDev/gitignore-sync/commit/5b7335a73742694a926c55ec49ab32f17b8a50a6))
+* **templates:** add laravel v2 following the laravel 13 skeleton ([401d161](https://github.com/kirchDev/gitignore-sync/commit/401d1617922a27be4d0d7b0ed8a99add41812e73))
+* **templates:** add php v2 with composer credentials and tooling caches ([a31ef10](https://github.com/kirchDev/gitignore-sync/commit/a31ef10279ecef91434da193c934b37b22efbaea))
+
 ## [0.4.0](https://github.com/kirchDev/gitignore-sync/compare/v0.3.1...v0.4.0) (2026-09-16)
 
 
