@@ -45,7 +45,8 @@ that then claims it for the whole team.
   repository that wants them names them explicitly, with `init --stacks=` or
   `add`, or confirms them in the prompt.
 - A stack the repository grows later is only proposed when someone runs
-  `sync --detect`, and only rendered once someone adds it to the header.
+  `sync --detect` or `edit`, and only rendered once someone adds it to the
+  header.
 
 ## Alternatives considered
 
