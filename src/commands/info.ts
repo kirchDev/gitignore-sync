@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { isSea } from 'node:sea';
 import { defineCommand } from 'citty';
 import { colors } from 'consola/utils';
 import { dirname, join, resolve } from 'pathe';
@@ -18,8 +19,11 @@ const PACKAGE_NAME = '@kirchdev/gitignore-sync';
 /** What a person types, and what the report is headed with. */
 const BIN_NAME = 'gitignore-sync';
 
-/** `linked` = runs from a git work tree; `release` = an installed package. */
-type BuildKind = 'linked' | 'release' | 'unknown';
+/**
+ * `linked` = runs from a git work tree; `release` = an installed package;
+ * `sea` = the single executable, which has no package.json to be found.
+ */
+type BuildKind = 'linked' | 'release' | 'sea' | 'unknown';
 
 type Info = {
   version: string;
@@ -78,6 +82,18 @@ function findPackageRoot(
  * neither can be established, report `unknown` rather than guessing.
  */
 function detectBuild(resolved: string | null): Info['build'] {
+  // Asked first, because the question the rest of this function answers has no
+  // answer here: a single executable is one file holding the runtime, the
+  // bundle and the templates, so there is no package.json above it to walk up
+  // to. Without this branch a Homebrew install reports `unknown`, which reads
+  // like a defect rather than the most ordinary install there is.
+  if (isSea()) {
+    return {
+      kind: 'sea',
+      packageRoot: null,
+      reason: 'single executable, nothing installed beside it'
+    };
+  }
   if (!resolved) {
     return {
       kind: 'unknown',
@@ -154,6 +170,7 @@ function inspectRepository(dir: string): Info['repository'] {
 const BUILD_LABELS: Record<BuildKind, string> = {
   linked: 'linked / dev build',
   release: 'installed release',
+  sea: 'single executable',
   unknown: 'unknown'
 };
 
