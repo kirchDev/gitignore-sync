@@ -35,6 +35,7 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 | `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` — the CI gate |
 | `pnpm check:policy` | Proves the two agent policy files ban the same commands             |
 | `pnpm templates:lock`| Re-writes `tests/templates.lock.json` after adding a template version |
+| `pnpm sea:build`    | After `pnpm build`: a single executable for this platform → `dist/release/` |
 | `pnpm check:fix`    | Auto-fix lint + format                                              |
 | `pnpm skills:update`| Update project-scoped agent skills via the skills.sh CLI            |
 | `pnpm taze`         | Interactive dependency upgrade check                                |
@@ -109,7 +110,7 @@ templates        → Record<stack, Template[]> // data, versioned with the binar
 
 `parse`, `render` and `reconcile` touch **no filesystem**. That puts the whole hard part — marker parsing, free zone, rescuing stray lines, dedup — behind a string-in/string-out seam. **Test that seam with fixture pairs under `tests/fixtures/` (`<name>.in` / `<name>.out`), never with temporary directories.** Adding a pair is the cheapest way to pin a behaviour; `tests/fixtures.test.ts` picks it up automatically and asserts idempotency on top.
 
-`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `edit`, `add`, `remove`, `sync`, `check`, `list`, `info`, `audit`) stay thin and compose the pure parts. `info` is the odd one out: it describes the *installation* rather than the file, so a `linked / dev build` is never mistaken for the published release. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
+`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `edit`, `add`, `remove`, `sync`, `check`, `list`, `info`, `audit`) stay thin and compose the pure parts. `info` is the odd one out: it describes the *installation* rather than the file, so a `linked / dev build` is never mistaken for the published release, and a downloaded binary reports itself as a `single executable`. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
 
 `edit`, `add` and `remove` are thin verbs over one header edit — they rewrite the `# stacks:` line and re-render, nothing more. They exist because discovering "open the file, change one line, run sync" from an error message is not a workflow.
 
@@ -232,11 +233,13 @@ Four template rules that are not style:
 - **`agents` carries working files, not configuration.** Across the estate **126 files** under `.claude/`, `.codex/` and `.opencode/` are committed — `settings.json`, skills, `default.rules`, agent definitions. Only `settings.local.json` and `worktrees/` describe one machine, and only those two are in `agents@v1`. `agents@v2` adds `.codex/config.toml`: Laravel Boost writes it with absolute paths of the machine it ran on, and both repos that commit one (`app`, `gildstone`) committed exactly that — the file, not the directory, so `.codex/rules/` stays committable. `.claude/worktrees/` is included because it accumulates for real and the one repo that ignores it today does so in `.git/info/exclude` — private knowledge that belongs where the team can see it.
 - **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
 
-### Two surfaces, one tool
+### Three surfaces, one tool
 
 `action.yml` in this repo is a **composite** action wrapping `npx @kirchdev/gitignore-sync check`, because the exit code is the whole result — it adds a job summary and a `status` output, nothing else. `kirchDev/coverage-report` bundles its CLI into `dist/index.js` instead, and should: that action writes sticky comments and check runs of its own. Copying its shape here would ship the same code twice and give two things to keep in step.
 
 Most repos need neither. `kirchDev/workflows`' `_ci-check.yml` derives its task list from `package.json`, so adding `gitignore-sync check` to a repo's `check` script is picked up with no workflow change at all.
+
+The third surface is for machines without Node: every stable release carries a **Node single executable** per platform — `darwin` and `linux`, `arm64` and `x64` — built by `sea.yml` — on every pull request that touches the build, for all four platforms, and called by `release-please.yml` to attach them to the release, so the check and the release cannot drift ([ADR-0010](docs/99.adr/0010-ship-standalone-binaries-as-node-single-executables.md)). It is the same bundle with node inside it, not a second runtime: `bun build --compile` would have been one command, but it would ship a binary running on a runtime the test suite never runs on. Three things in it are not cosmetic: the entry is CommonJS (`vite.sea.config.ts`), because the embedder runs the main script as CJS; it must stay one file, because the embedder's `require` loads builtins only; and darwin needs `--macho-segment-name NODE_SEA` plus an ad-hoc re-sign. `scripts/sea-build.ts` checks all of it by running the binary before packaging. Archive names carry no version, so `releases/latest/download/…` always resolves. Windows gets no binary; npm is the path there.
 
 ## Architecture / conventions
 
@@ -246,7 +249,7 @@ Most repos need neither. `kirchDev/workflows`' `_ci-check.yml` derives its task 
 - **Published as `@kirchdev/gitignore-sync`**, scoped like `@kirchdev/coverage-report`. The `bin` entries stay unscoped (`gitignore-sync`, `gis`) and so does release-please's `package-name` — the scope belongs to the registry, not to what a person types or what a tag is called.
 - **`pnpm link --global .` edits `pnpm-workspace.yaml`**, adding an `overrides:` block pointing at the local checkout. That file is committed, so the block must never be: it would make every clone try to link a package that exists on one machine. `pnpm unlink` reverts it; `pnpm link` is only for trying the CLI locally.
 - **The CLI's `--version` is injected at build time** by vite's `define` from `package.json`'s `version`, which release-please owns. Never hand-copy a version literal.
-- **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge.
+- **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge. `postject`, which injects the single executable's blob, is a dev dependency only: the binary carries nothing of it.
 - **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
 - **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
 - **release-please** with `release-type: node`, `include-v-in-tag: true`. Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
