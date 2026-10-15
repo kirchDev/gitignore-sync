@@ -32,7 +32,7 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 | `pnpm lint`         | `oxlint . --deny-warnings`                                          |
 | `pnpm format`       | `oxfmt --check .` (note: `format` is the check, not fix)            |
 | `pnpm typecheck`    | `tsc --noEmit`                                                      |
-| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` — the CI gate |
+| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` — the CI gate |
 | `pnpm check:policy` | Proves the two agent policy files ban the same commands             |
 | `pnpm templates:lock`| Re-writes `tests/templates.lock.json` after adding a template version |
 | `pnpm check:fix`    | Auto-fix lint + format                                              |
@@ -58,7 +58,6 @@ So a declaration is unavoidable — and once one is needed, the cheapest place i
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
@@ -122,6 +121,8 @@ templates        → Record<stack, Template[]> // data, versioned with the binar
 
 Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` repos, not from a public template site. The count is how many of them the stack applies to.
 
+**That estate is the first source, not the only one** ([ADR-0009](docs/99.adr/0009-accept-stacks-on-the-word-of-the-tool-that-writes-the-files.md)). A stack may also ship on the word of the tool that writes the files — its scaffold's own `.gitignore`, or output it documents — which is the precedent `php@v2` and `laravel@v2` set by following the Laravel skeleton. What never qualifies is a public template site's guess. Either way the provenance comment above the template names the source, and the count below stays honest, `0` included.
+
 | Stack      | Fingerprint                          | Repos |
 | :--------- | :----------------------------------- | ----: |
 | `core`       | always proposed                    |    27 |
@@ -131,11 +132,14 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `dotenv`     | `.env.example` / `.env`            |     7 |
 | `php`        | `composer.json`                    |     3 |
 | `go`         | `go.mod`                           |     3 |
+| `python`     | `pyproject.toml` / `requirements.txt` / `setup.py`, not under `docs/` | 0 |
 | `turborepo`  | `turbo.json`                       |     3 |
 | `tofu`       | `*.tf` / `*.tofu` / lock file      |     1 |
 | `laravel`    | `artisan`                          |     1 |
 | `octane`     | `config/octane.php`                |     3 |
+| `helm`       | `Chart.yaml`                       |     0 |
 | `nuxt`       | `nuxt.config.*`                    |     1 |
+| `vite`       | `vite.config.*` beside an `index.html` | 1 |
 | `tauri`      | `src-tauri/`                       |     1 |
 | `storybook`  | `.storybook/`                      |     1 |
 | `gradle`     | `build.gradle*` / `settings.gradle*` |     1 |
@@ -149,6 +153,10 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `linux`      | `process.platform` *(machine)*    |     — |
 
 Two stacks show **0**, on purpose. `rust` is fingerprinted on a *root* `Cargo.toml` only — the one Tauri app keeps its crate under `src-tauri/`, and that build output already belongs to the `tauri` stack, so matching it there would render a `/target` line pointing at nothing. `playwright` ships because one repo ignores its three output dirs, but that repo has no root config, so nothing in the estate currently triggers it; it is declared by hand until one does.
+
+`python` shows **0** for `playwright`'s reason: `mc-network` ignores `__pycache__/` but keeps no Python manifest within reach of the fingerprint. It was contributed for three `kirch-ostendorf` Ansible repos outside the 28, which it does trigger, and an `audit` across both estates has it absorbing ten lines.
+
+Two more ship without estate evidence, on the word of the tool that writes the files. `helm` names the tarballs `helm dependency update` vendors into `charts/` — no repo in the estate holds a chart. `vite` carries the two lines the `create-vite` / `create-vue` scaffold adds on top of `node`, in its spelling, so a fresh scaffold is absorbed; the one Vite app in the estate does not ignore them yet.
 
 ### One detector, and a `source` on every signal
 
@@ -174,14 +182,16 @@ Deliberate omissions, each for a reason worth keeping:
 - **`composer.lock` is in no template.** A library ignores it, an application commits it — a project decision, so it belongs in the free zone.
 - **The JVM stack is `gradle`, not `java`.** What a JVM repo ignores follows the build tool — Gradle writes `build/`, Maven `target/` — so a `java` stack would render lines pointing at nothing in half the repos. `*.jar` is left out because the Gradle wrapper jar is committed. A `maven` stack waits until a repo needs one.
 - **`dist` belongs to `node` alone**, not to `go`. goreleaser writes there too, but a line may live in only one stack (below), and `node` claims it.
+- **`python` carries no `dist/` or `build/`** for the same reason: they are `node`'s and `gradle`'s. A pure Python repository that builds wheels keeps `dist/` in its free zone. `*.py[cod]` is left out too — CPython has written bytecode into `__pycache__/` since 3.2.
+- **`helm` never names `charts/` itself**, only `**/charts/*.tgz`: a bare directory would hide the charts a chart repository keeps there, the same defect as a bare `.vscode`. `Chart.lock` is committed, like `.terraform.lock.hcl`, and a packaged chart's `*.tgz` is `node`'s line.
 - **`.terraform.lock.hcl` is not ignored** — it is meant to be committed.
 - **No `prisma` stack**, even though one repo ignores `src/generated/prisma/`. The path is configurable, so it is a project rule, and the free zone is exactly where it belongs.
 
-**Coverage is measured, not assumed.** `gitignore-sync audit <dirs…>` runs the real `reconcile` over every named repo with every stack declared, and reports what is left — per file and aggregated, `--json` included. It exists as a shipped command rather than a scratch script precisely so a later agent or skill measures with the tool's own semantics instead of reimplementing them. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run it before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for.
+**Coverage is measured, not assumed.** `gitignore-sync audit <dirs…>` runs the real `reconcile` over every named repo with every stack declared, and reports what is left — per file and aggregated, `--json` included. It exists as a shipped command rather than a scratch script precisely so a later agent or skill measures with the tool's own semantics instead of reimplementing them. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run it before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for — it ships only if the tool that writes the files vouches for it instead, and otherwise belongs in a free zone.
 
 **A bare `.idea` or `.vscode` beside a managed block is a defect, not a duplicate.** git does not descend into an ignored directory, so `.vscode` sitting in the free zone silently disables every `!.vscode/…` exception the block renders. `reconcile` reports it as `smothered` — a distinct, louder finding than the equivalent-spelling note, because the file is now doing something other than what it reads like.
 
-**Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo.
+**Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo. A fingerprint can narrow itself further: `skip` keeps `python` out of `docs/`, where Read the Docs, MkDocs and Sphinx keep build requirements in repos with no Python of their own, and `beside` counts `vite.config.*` only next to an `index.html`, so a library or CLI built with Vite — this repo included — is not offered lines that point at nothing.
 
 ### Sub-`.gitignore`s: three kinds, three verdicts
 

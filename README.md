@@ -97,7 +97,6 @@ Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positi
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
@@ -117,7 +116,7 @@ Everything below the closing `# endregion` is the **free zone**: yours, preserve
 
 ## 🧩 Stacks
 
-Twenty-one curated blocks, each derived from what the estate actually ignores rather than from a public template site.
+Curated blocks, each derived from what real repositories actually ignore — or from what the tool writing the files puts in its own scaffold — rather than from a public template site.
 
 | Stack      | What it covers                       | Proposed by `init` when       |
 | :--------- | :----------------------------------- | :---------------------------- |
@@ -128,14 +127,19 @@ Twenty-one curated blocks, each derived from what the estate actually ignores ra
 | `dotenv`   | `.env*`, minus the committed example | `.env.example` or `.env`      |
 | `php`      | `/vendor`, PHPUnit caches            | `composer.json`               |
 | `laravel`  | build output, storage keys, SSR      | `artisan`                     |
+| `octane`   | the server binaries `octane:install` adds | `config/octane.php`      |
 | `go`       | test and build droppings             | `go.mod`                      |
+| `python`   | `__pycache__/`, `.venv/`, tool caches | `pyproject.toml`, `requirements.txt`, `setup.py` |
 | `tofu`     | state, tfvars, local overrides       | `*.tf` / `*.tofu`             |
+| `helm`     | vendored chart tarballs              | `Chart.yaml`                  |
 | `nuxt`     | `.nuxt`, `.output`, `.nitro`         | `nuxt.config.*`               |
+| `vite`     | `dist-ssr`, `*.local`                | `vite.config.*` beside `index.html` |
 | `tauri`    | `src-tauri/target`, generated schemas| `src-tauri/`                  |
 | `rust`     | `/target`                            | a root `Cargo.toml`           |
 | `turborepo`| `.turbo`                             | `turbo.json`                  |
 | `playwright` | test-results, reports              | `playwright.config.*`         |
 | `storybook`| `storybook-static`                   | `.storybook/`                 |
+| `gradle`   | `.gradle/`, `.kotlin/`, `build/`     | `build.gradle*` / `settings.gradle*` |
 | `vscode`   | `.vscode/*` + the shared files       | you have a `.vscode/`         |
 | `intellij` | `.idea/*`                            | you have a `.idea/`           |
 | `vim`      | swap and session files               | your `$EDITOR` is vim         |
@@ -164,14 +168,14 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 - run: npx @kirchdev/gitignore-sync check
 ```
 
-`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.
+`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints its findings.
 
 There is also an action, for a job summary on failure and a `status` output:
 
 ```yaml
-- uses: kirchDev/gitignore-sync@v0.1.0
+- uses: kirchDev/gitignore-sync@vX.Y.Z
   with:
-    version: '0.1.0'   # pin it, so a release cannot turn a green pipeline red
+    version: 'X.Y.Z'   # pin it, so a release cannot turn a green pipeline red
 ```
 
 > [!NOTE]

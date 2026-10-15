@@ -112,6 +112,33 @@ const registry: Record<string, Template[]> = {
       lines: ['*.exe', '*.test', '*.out', '*.prof']
     }
   ],
+  // The caches Python tooling drops beside the source it just read, plus the
+  // virtualenv. Nothing packaging-related: a wheel is built into `dist/` and a
+  // test run reports into `coverage`, and both of those lines are `node`'s.
+  //
+  // `.venv/` is unanchored because an Ansible repo keeps its control-machine
+  // virtualenv in `ansible/.venv/` rather than at the root. `.coverage` and
+  // `htmlcov/` are coverage.py's data file and its HTML report — distinct
+  // spellings from `coverage`, so neither collides with the `node` block.
+  //
+  // `*.py[cod]` is deliberately absent: CPython has written bytecode into
+  // `__pycache__/` since 3.2 (PEP 3147), so the directory already covers where
+  // it lands and the glob would only reach leftovers from Python 2.
+  python: [
+    {
+      stack: 'python',
+      version: 1,
+      lines: [
+        '__pycache__/',
+        '.venv/',
+        '.pytest_cache/',
+        '.mypy_cache/',
+        '.ruff_cache/',
+        '.coverage',
+        'htmlcov/'
+      ]
+    }
+  ],
   // State and local overrides. `.terraform.lock.hcl` is deliberately **not**
   // ignored — it is meant to be committed. `*.tfvars` usually carries
   // credentials, so it is ignored with the example carved back out.
@@ -132,6 +159,28 @@ const registry: Record<string, Template[]> = {
         'crash.log',
         'crash.*.log'
       ]
+    }
+  ],
+  // `helm dependency update` vendors a chart's dependencies as tarballs into
+  // its `charts/` directory. `Chart.lock` records what it resolved and is
+  // meant to be committed, like `.terraform.lock.hcl` above.
+  //
+  // Only the tarballs are named, never the directory: git does not descend
+  // into an ignored directory, so a bare `charts/` would hide the charts
+  // themselves — the same defect a bare `.vscode` causes.
+  //
+  // `**/charts/` rather than `charts/` because a chart repository keeps each
+  // chart in `charts/<name>/`, one level deeper than a repo shipping a single
+  // chart at its root.
+  //
+  // A chart built with `helm package` lands as `<name>-<version>.tgz` in the
+  // working directory, and that spelling is `node@v1`'s (`npm pack` writes one
+  // too). A line lives in one stack, so it stays there.
+  helm: [
+    {
+      stack: 'helm',
+      version: 1,
+      lines: ['**/charts/*.tgz']
     }
   ],
   // `composer.lock` is not here on purpose: a library ignores it, an
@@ -295,6 +344,22 @@ const registry: Record<string, Template[]> = {
       stack: 'nuxt',
       version: 1,
       lines: ['.nuxt', '.output', '.nitro', '.data']
+    }
+  ],
+  // The two lines a `create-vue` scaffold carries that `node` does not already
+  // have, in the scaffold's own spelling, so a fresh one is absorbed rather
+  // than reported as equivalent spellings.
+  //
+  // Named after the build tool and not Vue: what a repo ignores follows
+  // whatever writes the files, the same reason the JVM stack is `gradle` and
+  // not `java`. A Vue repo on another bundler has neither line, and a Vite
+  // library that never builds for SSR carries them inert — which is still
+  // cheaper than every app repeating them by hand in the free zone.
+  vite: [
+    {
+      stack: 'vite',
+      version: 1,
+      lines: ['dist-ssr', '*.local']
     }
   ],
   tauri: [

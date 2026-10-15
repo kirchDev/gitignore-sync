@@ -1,0 +1,11 @@
+# region gitignore-sync
+# stacks: core, helm
+# ─────────────────────────────────────────
+
+# endregion
+
+# Vendored chart dependencies
+**/charts/*.tgz
+
+# Packaged charts
+*.tgz
