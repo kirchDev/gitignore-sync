@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 // The entry for the single executable, and nothing else. The npm artifact is
@@ -14,11 +15,16 @@ import { defineConfig } from 'vite';
 //   - **No externals but node's builtins.** A single executable carries no
 //     `node_modules`, so citty, consola and pathe have to be inlined rather
 //     than resolved at runtime.
+//   - **One file.** The embedder's `require` loads builtins only, so a chunk
+//     split off the entry could never be loaded. The bundle has no dynamic
+//     import to split on, and `scripts/sea-build.ts` refuses to package one
+//     that does.
 //
-// Everything else is deliberately identical to the npm build, the inlined
-// version included, so `--version` reads the same out of either artifact.
+// The target and the inlined version match the npm build, so `--version` reads
+// the same out of either artifact.
 
-const root = dirname(new URL(import.meta.url).pathname);
+// fileURLToPath, not `.pathname`: the latter keeps `%20` in a path with spaces.
+const root = dirname(fileURLToPath(import.meta.url));
 
 const nodeBuiltins = new Set([
   ...builtinModules,
