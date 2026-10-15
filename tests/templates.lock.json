@@ -104,6 +104,7 @@
   ],
   "storybook@v1": ["storybook-static"],
   "nuxt@v1": [".nuxt", ".output", ".nitro", ".data"],
+  "vite@v1": ["dist-ssr", "*.local"],
   "tauri@v1": ["src-tauri/target", "src-tauri/gen/schemas"],
   "dotenv@v1": [
     ".env",

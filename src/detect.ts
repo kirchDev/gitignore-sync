@@ -100,6 +100,9 @@ const fingerprints: Record<string, Fingerprint> = {
   // other people's examples ship.
   helm: { source: 'repo', patterns: [/^Chart\.yaml$/] },
   nuxt: { source: 'repo', patterns: [/^nuxt\.config\.[cm]?[jt]s$/] },
+  // One level down as well: a Go service keeps its SPA in `web/` or
+  // `frontend/`, which is where the config sits.
+  vite: { source: 'repo', patterns: [/^vite\.config\.[cm]?[jt]s$/] },
   tauri: { source: 'repo', files: ['src-tauri'] },
   // A committed `.env.example` is the marker, not `.env` — the latter is the
   // very file the stack exists to keep out, so it is often absent on a fresh

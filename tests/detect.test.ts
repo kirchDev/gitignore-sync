@@ -63,6 +63,13 @@ describe('detect', () => {
     expect(names(dir)).toContain('helm');
   });
 
+  it('fingerprints vite from a config in a frontend subdirectory', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'web'));
+    writeFileSync(join(dir, 'web', 'vite.config.ts'), '');
+    expect(names(dir)).toContain('vite');
+  });
+
   it('fingerprints dotenv from a committed .env.example', () => {
     const dir = fresh();
     writeFileSync(join(dir, '.env.example'), '');

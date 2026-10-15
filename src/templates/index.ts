@@ -346,6 +346,22 @@ const registry: Record<string, Template[]> = {
       lines: ['.nuxt', '.output', '.nitro', '.data']
     }
   ],
+  // The two lines a `create-vue` scaffold carries that `node` does not already
+  // have, in the scaffold's own spelling, so a fresh one is absorbed rather
+  // than reported as equivalent spellings.
+  //
+  // Named after the build tool and not Vue: what a repo ignores follows
+  // whatever writes the files, the same reason the JVM stack is `gradle` and
+  // not `java`. A Vue repo on another bundler has neither line, and a Vite
+  // library that never builds for SSR carries them inert — which is still
+  // cheaper than every app repeating them by hand in the free zone.
+  vite: [
+    {
+      stack: 'vite',
+      version: 1,
+      lines: ['dist-ssr', '*.local']
+    }
+  ],
   tauri: [
     {
       stack: 'tauri',
