@@ -102,7 +102,7 @@ Everything below the closing `# endregion` is the **free zone**: yours, preserve
 
 ## 🧩 Stacks
 
-Twenty-six curated blocks, each derived from what real repositories actually ignore — or from what the tool writing the files puts in its own scaffold — rather than from a public template site.
+Curated blocks, each derived from what real repositories actually ignore — or from what the tool writing the files puts in its own scaffold — rather than from a public template site.
 
 | Stack      | What it covers                       | Proposed by `init` when       |
 | :--------- | :----------------------------------- | :---------------------------- |
