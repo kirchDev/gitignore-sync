@@ -35,6 +35,24 @@ pnpm add -g @kirchdev/gitignore-sync   # npm i -g / yarn global add / bun add -g
 
 Or run it without installing: `npx @kirchdev/gitignore-sync <command>`. The binary is also available as `gis`.
 
+For a machine with no Node on it, every release also carries a standalone binary with the runtime inside it, for `darwin_arm64`, `darwin_x64`, `linux_x64` and `linux_arm64`. Download it, verify it, and put it on your `PATH`:
+
+```bash
+NAME="gitignore-sync_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/').tar.gz"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/latest/download/${NAME}"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/latest/download/${NAME}.sha256"
+shasum -a 256 -c "${NAME}.sha256"   # or: sha256sum -c
+tar -xzf "${NAME}"
+mkdir -p ~/.local/bin && mv gitignore-sync ~/.local/bin/   # or any directory on your PATH
+gitignore-sync info                 # reports "single executable"
+```
+
+> [!NOTE]
+> The archive holds one file and installs nothing else, so any directory on your `PATH` works, and `gis` works as a name too (`ln -s ~/.local/bin/gitignore-sync ~/.local/bin/gis`). To update, run the same lines again; to uninstall, delete the file. Swap `latest/download` for `download/vX.Y.Z` to pin a release. Windows has no binary; use the npm package there.
+
+> [!TIP]
+> The macOS binaries are signed ad hoc, not notarised. Downloaded with `curl` as above they run as they are; one downloaded in a browser is quarantined first — clear it with `xattr -d com.apple.quarantine gitignore-sync`.
+
 ## 🚀 Quick start
 
 ```bash
@@ -82,7 +100,6 @@ Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positi
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
@@ -102,7 +119,7 @@ Everything below the closing `# endregion` is the **free zone**: yours, preserve
 
 ## 🧩 Stacks
 
-Twenty-one curated blocks, each derived from what the estate actually ignores rather than from a public template site.
+Curated blocks, each derived from what real repositories actually ignore — or from what the tool writing the files puts in its own scaffold — rather than from a public template site.
 
 | Stack      | What it covers                       | Proposed by `init` when       |
 | :--------- | :----------------------------------- | :---------------------------- |
@@ -113,14 +130,19 @@ Twenty-one curated blocks, each derived from what the estate actually ignores ra
 | `dotenv`   | `.env*`, minus the committed example | `.env.example` or `.env`      |
 | `php`      | `/vendor`, PHPUnit caches            | `composer.json`               |
 | `laravel`  | build output, storage keys, SSR      | `artisan`                     |
+| `octane`   | the server binaries `octane:install` adds | `config/octane.php`      |
 | `go`       | test and build droppings             | `go.mod`                      |
+| `python`   | `__pycache__/`, `.venv/`, tool caches | `pyproject.toml`, `requirements.txt`, `setup.py` |
 | `tofu`     | state, tfvars, local overrides       | `*.tf` / `*.tofu`             |
+| `helm`     | vendored chart tarballs              | `Chart.yaml`                  |
 | `nuxt`     | `.nuxt`, `.output`, `.nitro`         | `nuxt.config.*`               |
+| `vite`     | `dist-ssr`, `*.local`                | `vite.config.*` beside `index.html` |
 | `tauri`    | `src-tauri/target`, generated schemas| `src-tauri/`                  |
 | `rust`     | `/target`                            | a root `Cargo.toml`           |
 | `turborepo`| `.turbo`                             | `turbo.json`                  |
 | `playwright` | test-results, reports              | `playwright.config.*`         |
 | `storybook`| `storybook-static`                   | `.storybook/`                 |
+| `gradle`   | `.gradle/`, `.kotlin/`, `build/`     | `build.gradle*` / `settings.gradle*` |
 | `vscode`   | `.vscode/*` + the shared files       | you have a `.vscode/`         |
 | `intellij` | `.idea/*`                            | you have a `.idea/`           |
 | `vim`      | swap and session files               | your `$EDITOR` is vim         |
@@ -149,14 +171,14 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 - run: npx @kirchdev/gitignore-sync check
 ```
 
-`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.
+`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints its findings.
 
 There is also an action, for a job summary on failure and a `status` output:
 
 ```yaml
-- uses: kirchDev/gitignore-sync@v0.1.0
+- uses: kirchDev/gitignore-sync@vX.Y.Z
   with:
-    version: '0.1.0'   # pin it, so a release cannot turn a green pipeline red
+    version: 'X.Y.Z'   # pin it, so a release cannot turn a green pipeline red
 ```
 
 > [!NOTE]

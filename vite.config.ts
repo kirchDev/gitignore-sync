@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { builtinModules } from 'node:module';
 import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 // From vitest/config, not vite: vitest 4 no longer augments vite's UserConfig
 // with the `test` key, so vite's own defineConfig rejects it.
 import { defineConfig } from 'vitest/config';
 
-const root = dirname(new URL(import.meta.url).pathname);
+// fileURLToPath, not `.pathname`: the latter keeps `%20` in a path with spaces.
+const root = dirname(fileURLToPath(import.meta.url));
 
 const nodeBuiltins = new Set([
   ...builtinModules,

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { __test } from '../src/commands/info.ts';
 
 const { detectBuild, findPackageRoot, resolveBinary } = __test;
@@ -67,5 +67,23 @@ describe('info', () => {
 
   it('reports unknown when nothing can be resolved', () => {
     expect(detectBuild(null).kind).toBe('unknown');
+  });
+
+  // `isSea()` is false under the test runner by construction, so the branch is
+  // reached by swapping the module rather than by building a binary the size of
+  // node itself in the suite. The real artifact is checked by `scripts/sea-build.ts`, which
+  // runs `--version` out of the binary before packaging it.
+  it('calls a single executable its own build, not an unknown one', async () => {
+    vi.resetModules();
+    vi.doMock('node:sea', () => ({ isSea: () => true }));
+    try {
+      const { __test: sea } = await import('../src/commands/info.ts');
+      const build = sea.detectBuild('/usr/local/bin/gitignore-sync');
+      expect(build.kind).toBe('sea');
+      expect(build.packageRoot).toBeNull();
+    } finally {
+      vi.doUnmock('node:sea');
+      vi.resetModules();
+    }
   });
 });

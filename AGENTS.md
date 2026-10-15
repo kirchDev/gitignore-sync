@@ -32,9 +32,10 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 | `pnpm lint`         | `oxlint . --deny-warnings`                                          |
 | `pnpm format`       | `oxfmt --check .` (note: `format` is the check, not fix)            |
 | `pnpm typecheck`    | `tsc --noEmit`                                                      |
-| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` — the CI gate |
+| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` — the CI gate |
 | `pnpm check:policy` | Proves the two agent policy files ban the same commands             |
 | `pnpm templates:lock`| Re-writes `tests/templates.lock.json` after adding a template version |
+| `pnpm sea:build`    | After `pnpm build`: a single executable for this platform → `dist/release/` |
 | `pnpm check:fix`    | Auto-fix lint + format                                              |
 | `pnpm skills:update`| Update project-scoped agent skills via the skills.sh CLI            |
 | `pnpm taze`         | Interactive dependency upgrade check                                |
@@ -58,7 +59,6 @@ So a declaration is unavoidable — and once one is needed, the cheapest place i
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
@@ -110,7 +110,7 @@ templates        → Record<stack, Template[]> // data, versioned with the binar
 
 `parse`, `render` and `reconcile` touch **no filesystem**. That puts the whole hard part — marker parsing, free zone, rescuing stray lines, dedup — behind a string-in/string-out seam. **Test that seam with fixture pairs under `tests/fixtures/` (`<name>.in` / `<name>.out`), never with temporary directories.** Adding a pair is the cheapest way to pin a behaviour; `tests/fixtures.test.ts` picks it up automatically and asserts idempotency on top.
 
-`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `edit`, `add`, `remove`, `sync`, `check`, `list`, `info`, `audit`) stay thin and compose the pure parts. `info` is the odd one out: it describes the *installation* rather than the file, so a `linked / dev build` is never mistaken for the published release. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
+`src/io.ts` and `src/detect.ts` are the only modules that read or write files. The commands (`init`, `edit`, `add`, `remove`, `sync`, `check`, `list`, `info`, `audit`) stay thin and compose the pure parts. `info` is the odd one out: it describes the *installation* rather than the file, so a `linked / dev build` is never mistaken for the published release, and a downloaded binary reports itself as a `single executable`. `check` is the CI gate: dry run, reports drift and duplicates, exits non-zero on deviation.
 
 `edit`, `add` and `remove` are thin verbs over one header edit — they rewrite the `# stacks:` line and re-render, nothing more. They exist because discovering "open the file, change one line, run sync" from an error message is not a workflow.
 
@@ -122,6 +122,8 @@ templates        → Record<stack, Template[]> // data, versioned with the binar
 
 Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` repos, not from a public template site. The count is how many of them the stack applies to.
 
+**That estate is the first source, not the only one** ([ADR-0009](docs/99.adr/0009-accept-stacks-on-the-word-of-the-tool-that-writes-the-files.md)). A stack may also ship on the word of the tool that writes the files — its scaffold's own `.gitignore`, or output it documents — which is the precedent `php@v2` and `laravel@v2` set by following the Laravel skeleton. What never qualifies is a public template site's guess. Either way the provenance comment above the template names the source, and the count below stays honest, `0` included.
+
 | Stack      | Fingerprint                          | Repos |
 | :--------- | :----------------------------------- | ----: |
 | `core`       | always proposed                    |    27 |
@@ -131,11 +133,14 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `dotenv`     | `.env.example` / `.env`            |     7 |
 | `php`        | `composer.json`                    |     3 |
 | `go`         | `go.mod`                           |     3 |
+| `python`     | `pyproject.toml` / `requirements.txt` / `setup.py`, not under `docs/` | 0 |
 | `turborepo`  | `turbo.json`                       |     3 |
 | `tofu`       | `*.tf` / `*.tofu` / lock file      |     1 |
 | `laravel`    | `artisan`                          |     1 |
 | `octane`     | `config/octane.php`                |     3 |
+| `helm`       | `Chart.yaml`                       |     0 |
 | `nuxt`       | `nuxt.config.*`                    |     1 |
+| `vite`       | `vite.config.*` beside an `index.html` | 1 |
 | `tauri`      | `src-tauri/`                       |     1 |
 | `storybook`  | `.storybook/`                      |     1 |
 | `gradle`     | `build.gradle*` / `settings.gradle*` |     1 |
@@ -149,6 +154,10 @@ Every template was derived from the 28 locally cloned `kirchDev` / `TitusKirch` 
 | `linux`      | `process.platform` *(machine)*    |     — |
 
 Two stacks show **0**, on purpose. `rust` is fingerprinted on a *root* `Cargo.toml` only — the one Tauri app keeps its crate under `src-tauri/`, and that build output already belongs to the `tauri` stack, so matching it there would render a `/target` line pointing at nothing. `playwright` ships because one repo ignores its three output dirs, but that repo has no root config, so nothing in the estate currently triggers it; it is declared by hand until one does.
+
+`python` shows **0** for `playwright`'s reason: `mc-network` ignores `__pycache__/` but keeps no Python manifest within reach of the fingerprint. It was contributed for three `kirch-ostendorf` Ansible repos outside the 28, which it does trigger, and an `audit` across both estates has it absorbing ten lines.
+
+Two more ship without estate evidence, on the word of the tool that writes the files. `helm` names the tarballs `helm dependency update` vendors into `charts/` — no repo in the estate holds a chart. `vite` carries the two lines the `create-vite` / `create-vue` scaffold adds on top of `node`, in its spelling, so a fresh scaffold is absorbed; the one Vite app in the estate does not ignore them yet.
 
 ### One detector, and a `source` on every signal
 
@@ -174,14 +183,16 @@ Deliberate omissions, each for a reason worth keeping:
 - **`composer.lock` is in no template.** A library ignores it, an application commits it — a project decision, so it belongs in the free zone.
 - **The JVM stack is `gradle`, not `java`.** What a JVM repo ignores follows the build tool — Gradle writes `build/`, Maven `target/` — so a `java` stack would render lines pointing at nothing in half the repos. `*.jar` is left out because the Gradle wrapper jar is committed. A `maven` stack waits until a repo needs one.
 - **`dist` belongs to `node` alone**, not to `go`. goreleaser writes there too, but a line may live in only one stack (below), and `node` claims it.
+- **`python` carries no `dist/` or `build/`** for the same reason: they are `node`'s and `gradle`'s. A pure Python repository that builds wheels keeps `dist/` in its free zone. `*.py[cod]` is left out too — CPython has written bytecode into `__pycache__/` since 3.2.
+- **`helm` never names `charts/` itself**, only `**/charts/*.tgz`: a bare directory would hide the charts a chart repository keeps there, the same defect as a bare `.vscode`. `Chart.lock` is committed, like `.terraform.lock.hcl`, and a packaged chart's `*.tgz` is `node`'s line.
 - **`.terraform.lock.hcl` is not ignored** — it is meant to be committed.
 - **No `prisma` stack**, even though one repo ignores `src/generated/prisma/`. The path is configurable, so it is a project rule, and the free zone is exactly where it belongs.
 
-**Coverage is measured, not assumed.** `gitignore-sync audit <dirs…>` runs the real `reconcile` over every named repo with every stack declared, and reports what is left — per file and aggregated, `--json` included. It exists as a shipped command rather than a scratch script precisely so a later agent or skill measures with the tool's own semantics instead of reimplementing them. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run it before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for.
+**Coverage is measured, not assumed.** `gitignore-sync audit <dirs…>` runs the real `reconcile` over every named repo with every stack declared, and reports what is left — per file and aggregated, `--json` included. It exists as a shipped command rather than a scratch script precisely so a later agent or skill measures with the tool's own semantics instead of reimplementing them. The numbers that justified the current set: across the 27 files, **86 patterns** survive outside the five files carrying a generated toptal block, and 33 of those are the bare `.idea` / `.vscode` spellings below. Almost everything else is genuinely project-specific — which is the free zone working as intended. Re-run it before adding a stack; a stack that moves the number by one line is a stack the estate did not ask for — it ships only if the tool that writes the files vouches for it instead, and otherwise belongs in a free zone.
 
 **A bare `.idea` or `.vscode` beside a managed block is a defect, not a duplicate.** git does not descend into an ignored directory, so `.vscode` sitting in the free zone silently disables every `!.vscode/…` exception the block renders. `reconcile` reports it as `smothered` — a distinct, louder finding than the equivalent-spelling note, because the file is now doing something other than what it reads like.
 
-**Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo.
+**Pattern fingerprints search one level below the root** (`PATTERN_DEPTH` in `src/detect.ts`), because a Terraform repo keeps its stacks in `tofu/`. `examples/` is never descended into: a `.tf` shown as documentation is not a workspace that produces state, and treating it as one makes every provider repo look like an infrastructure repo. A fingerprint can narrow itself further: `skip` keeps `python` out of `docs/`, where Read the Docs, MkDocs and Sphinx keep build requirements in repos with no Python of their own, and `beside` counts `vite.config.*` only next to an `index.html`, so a library or CLI built with Vite — this repo included — is not offered lines that point at nothing.
 
 ### Sub-`.gitignore`s: three kinds, three verdicts
 
@@ -222,11 +233,13 @@ Four template rules that are not style:
 - **`agents` carries working files, not configuration.** Across the estate **126 files** under `.claude/`, `.codex/` and `.opencode/` are committed — `settings.json`, skills, `default.rules`, agent definitions. Only `settings.local.json` and `worktrees/` describe one machine, and only those two are in `agents@v1`. `agents@v2` adds `.codex/config.toml`: Laravel Boost writes it with absolute paths of the machine it ran on, and both repos that commit one (`app`, `gildstone`) committed exactly that — the file, not the directory, so `.codex/rules/` stays committable. `.claude/worktrees/` is included because it accumulates for real and the one repo that ignores it today does so in `.git/info/exclude` — private knowledge that belongs where the team can see it.
 - **`node_modules` belongs to the `node` stack, not to `core`** — a pure Go repo then correctly does not get it. That it lands almost everywhere in practice is a consequence of the estate, not a reason to blur the model.
 
-### Two surfaces, one tool
+### Three surfaces, one tool
 
 `action.yml` in this repo is a **composite** action wrapping `npx @kirchdev/gitignore-sync check`, because the exit code is the whole result — it adds a job summary and a `status` output, nothing else. `kirchDev/coverage-report` bundles its CLI into `dist/index.js` instead, and should: that action writes sticky comments and check runs of its own. Copying its shape here would ship the same code twice and give two things to keep in step.
 
 Most repos need neither. `kirchDev/workflows`' `_ci-check.yml` derives its task list from `package.json`, so adding `gitignore-sync check` to a repo's `check` script is picked up with no workflow change at all.
+
+The third surface is for machines without Node: every stable release carries a **Node single executable** per platform — `darwin` and `linux`, `arm64` and `x64` — built by `sea.yml` — on every pull request that touches the build, for all four platforms, and called by `release-please.yml` to attach them to the release, so the check and the release cannot drift ([ADR-0010](docs/99.adr/0010-ship-standalone-binaries-as-node-single-executables.md)). It is the same bundle with node inside it, not a second runtime: `bun build --compile` would have been one command, but it would ship a binary running on a runtime the test suite never runs on. Three things in it are not cosmetic: the entry is CommonJS (`vite.sea.config.ts`), because the embedder runs the main script as CJS; it must stay one file, because the embedder's `require` loads builtins only; and darwin needs `--macho-segment-name NODE_SEA` plus an ad-hoc re-sign. `scripts/sea-build.ts` checks all of it by running the binary before packaging. Archive names carry no version, so `releases/latest/download/…` always resolves. Windows gets no binary; npm is the path there.
 
 ## Architecture / conventions
 
@@ -236,11 +249,11 @@ Most repos need neither. `kirchDev/workflows`' `_ci-check.yml` derives its task 
 - **Published as `@kirchdev/gitignore-sync`**, scoped like `@kirchdev/coverage-report`. The `bin` entries stay unscoped (`gitignore-sync`, `gis`) and so does release-please's `package-name` — the scope belongs to the registry, not to what a person types or what a tag is called.
 - **`pnpm link --global .` edits `pnpm-workspace.yaml`**, adding an `overrides:` block pointing at the local checkout. That file is committed, so the block must never be: it would make every clone try to link a package that exists on one machine. `pnpm unlink` reverts it; `pnpm link` is only for trying the CLI locally.
 - **The CLI's `--version` is injected at build time** by vite's `define` from `package.json`'s `version`, which release-please owns. Never hand-copy a version literal.
-- **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge.
+- **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge. `postject`, which injects the single executable's blob, is a dev dependency only: the binary carries nothing of it.
 - **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
 - **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
 - **release-please** with `release-type: node`, `include-v-in-tag: true`. Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
-- **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6`, `github/codeql-action/{init,analyze}@v4`. Keep these pinned to major versions; Dependabot bumps them monthly.
+- **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `github/codeql-action/{init,analyze}@v4` — GitHub's own actions, pinned to major versions. A third-party action is pinned to a commit SHA with its version as a comment (`pnpm/action-setup@<sha> # v6.0.10`), exactly like the `kirchDev/workflows` refs: CodeQL flags a movable tag on one, since its owner can repoint it. Dependabot bumps both forms monthly.
 - **Bitwarden secret ids in workflows are vault references, not credentials.** The actual secret is `BWS_ACCESS_TOKEN`, a GitHub secret that never appears in a workflow file. Each owner authenticates as a different machine account and reads only its own `-ci` mirror, so this repo — a `kirchDev` repo — must carry the `kirchDev` id (`df8b447a-ffd5-4009-9cc3-b49b014f6978`), not `TitusKirch`'s. A mismatched id resolves for nobody, silently, until someone dispatches the workflow.
 
 ## AI & skills

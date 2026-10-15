@@ -1,0 +1,21 @@
+# region gitignore-sync
+# stacks: core, node, vite
+# ─────────────────────────────────────────
+
+# endregion
+
+# Logs
+*.log
+
+node_modules
+.DS_Store
+dist
+dist-ssr
+coverage
+*.local
+
+# Cypress artefacts
+/cypress/videos/
+/cypress/screenshots/
+
+*.tsbuildinfo
