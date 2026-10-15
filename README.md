@@ -82,7 +82,6 @@ Every command takes `--help` and a directory (`--dir` for `add`/`remove`, positi
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
@@ -154,14 +153,14 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 - run: npx @kirchdev/gitignore-sync check
 ```
 
-`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints what it would have changed.
+`check` writes nothing. It exits non-zero when the file has drifted from its header, and prints its findings.
 
 There is also an action, for a job summary on failure and a `status` output:
 
 ```yaml
-- uses: kirchDev/gitignore-sync@v0.1.0
+- uses: kirchDev/gitignore-sync@vX.Y.Z
   with:
-    version: '0.1.0'   # pin it, so a release cannot turn a green pipeline red
+    version: 'X.Y.Z'   # pin it, so a release cannot turn a green pipeline red
 ```
 
 > [!NOTE]

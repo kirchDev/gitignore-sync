@@ -32,7 +32,7 @@ Retyping a change is exactly how the two drift; one reflowed line or reworded cl
 | `pnpm lint`         | `oxlint . --deny-warnings`                                          |
 | `pnpm format`       | `oxfmt --check .` (note: `format` is the check, not fix)            |
 | `pnpm typecheck`    | `tsc --noEmit`                                                      |
-| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` — the CI gate |
+| `pnpm check`        | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` — the CI gate |
 | `pnpm check:policy` | Proves the two agent policy files ban the same commands             |
 | `pnpm templates:lock`| Re-writes `tests/templates.lock.json` after adding a template version |
 | `pnpm check:fix`    | Auto-fix lint + format                                              |
@@ -58,7 +58,6 @@ So a declaration is unavoidable — and once one is needed, the cheapest place i
 
 # region core@v1
 .DS_Store
-.claude/settings.local.json
 # endregion
 
 # region node@v1
