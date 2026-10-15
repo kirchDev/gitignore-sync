@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+# The single executables, built one way for two callers: a pull request that
+# touches the build proves every platform still produces a working binary, and
+# `release-please.yml` calls this with a tag to attach them to the release. One
+# file, so the check and the release cannot drift apart.
+
+name: Single executable
+
+on:
+  # Not a required check, so a path filter is safe here — unlike `CI / Gate`,
+  # a skipped run blocks nothing.
+  pull_request:
+    branches:
+      - main
+      - dev
+    paths:
+      - src/**
+      - scripts/sea-build.ts
+      - vite.config.ts
+      - vite.sea.config.ts
+      - package.json
+      - pnpm-lock.yaml
+      - .nvmrc
+      - .github/workflows/sea.yml
+  workflow_call:
+    inputs:
+      tag-name:
+        description: Release tag to build from and attach the archives to.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # One job per platform, and it has to be that way: a single executable is the
+  # target platform's own node binary with a blob injected into it, so there is
+  # nothing to cross-compile from. `macos-15-intel` is the Intel label that
+  # replaced the retired `macos-13`.
+  build:
+    name: ${{ matrix.target }}
+    permissions:
+      # `gh release upload` writes into the release; a pull request never
+      # reaches that step, and a caller can only grant what it holds.
+      contents: write
+    strategy:
+      # Every platform reports, rather than the first failure hiding the rest.
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runner: macos-latest
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # On release, the tag rather than the branch tip: the artifact has to
+          # carry the version that was released, and `--version` is inlined at
+          # build time. Empty on a pull request, which checks out its own head.
+          ref: ${{ inputs.tag-name }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `build` first: it empties `dist` to write the npm artifact, which would
+      # take the binary with it the other way round. `sea:build` runs the binary
+      # before packaging it, so a broken one fails here.
+      - run: pnpm build
+      - run: pnpm sea:build
+
+      # What the README tells people to run, run as written: the archive name it
+      # derives from `uname` must be the one this platform produced, the
+      # checksum must verify, and the extracted binary must work with no node
+      # on the PATH.
+      - name: Install it the way the README does
+        working-directory: dist/release
+        run: |
+          NAME="gitignore-sync_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/').tar.gz"
+          shasum -a 256 -c "${NAME}.sha256"
+          mkdir unpacked
+          tar -xzf "${NAME}" -C unpacked
+          env -i PATH=/usr/bin:/bin ./unpacked/gitignore-sync info
+          env -i PATH=/usr/bin:/bin ./unpacked/gitignore-sync list > /dev/null
+
+      - name: Attach the archive and its checksum
+        if: inputs.tag-name
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload "${{ inputs.tag-name }}"
+          dist/release/*.tar.gz dist/release/*.tar.gz.sha256
+          --clobber
