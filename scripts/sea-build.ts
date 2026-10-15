@@ -27,7 +27,13 @@
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,6 +60,16 @@ if (platform !== 'darwin' && platform !== 'linux') {
 }
 if (arch !== 'arm64' && arch !== 'x64') {
   console.error(`No single executable is built for ${arch}.`);
+  process.exit(1);
+}
+
+// The embedder can only run one script: anything vite split off the entry would
+// be missing at runtime, and only on the command that reaches for it.
+const emitted = readdirSync(seaDir).filter(
+  (name) => !['entry.cjs', 'sea-config.json', 'prep.blob'].includes(name)
+);
+if (emitted.length > 0) {
+  console.error(`The SEA bundle is not one file: ${emitted.join(', ')}.`);
   process.exit(1);
 }
 
@@ -92,8 +108,9 @@ if (platform === 'darwin') {
   run('codesign', ['--sign', '-', binary]);
 }
 
-// The binary has to answer before it is packaged. This is the check that would
-// have caught both mistakes in the comment at the top.
+// The binary has to answer before it is packaged. `--version` is the check that
+// would have caught both mistakes in the comment at the top; `list` goes past
+// the argument parser into a command and the bundled templates.
 const reported = execFileSync(binary, ['--version'], {
   encoding: 'utf8'
 }).trim();
@@ -101,8 +118,11 @@ if (reported !== pkg.version) {
   console.error(`The binary reports ${reported}, expected ${pkg.version}.`);
   process.exit(1);
 }
+execFileSync(binary, ['list'], { stdio: 'ignore' });
 
-const archive = `${binName}_${pkg.version}_${platform}_${arch}.tar.gz`;
+// No version in the name: the tag already carries it, and a stable name is what
+// lets `releases/latest/download/<name>` always point at the newest binary.
+const archive = `${binName}_${platform}_${arch}.tar.gz`;
 run('tar', ['-czf', join(outDir, archive), '-C', outDir, binName]);
 
 const sha = createHash('sha256')
