@@ -57,6 +57,12 @@ describe('detect', () => {
     expect(names(dir)).toContain('python');
   });
 
+  it('fingerprints helm from a chart at the root', () => {
+    const dir = fresh();
+    writeFileSync(join(dir, 'Chart.yaml'), '');
+    expect(names(dir)).toContain('helm');
+  });
+
   it('fingerprints dotenv from a committed .env.example', () => {
     const dir = fresh();
     writeFileSync(join(dir, '.env.example'), '');

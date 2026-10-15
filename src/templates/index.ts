@@ -161,6 +161,28 @@ const registry: Record<string, Template[]> = {
       ]
     }
   ],
+  // `helm dependency update` vendors a chart's dependencies as tarballs into
+  // its `charts/` directory. `Chart.lock` records what it resolved and is
+  // meant to be committed, like `.terraform.lock.hcl` above.
+  //
+  // Only the tarballs are named, never the directory: git does not descend
+  // into an ignored directory, so a bare `charts/` would hide the charts
+  // themselves — the same defect a bare `.vscode` causes.
+  //
+  // `**/charts/` rather than `charts/` because a chart repository keeps each
+  // chart in `charts/<name>/`, one level deeper than a repo shipping a single
+  // chart at its root.
+  //
+  // A chart built with `helm package` lands as `<name>-<version>.tgz` in the
+  // working directory, and that spelling is `node@v1`'s (`npm pack` writes one
+  // too). A line lives in one stack, so it stays there.
+  helm: [
+    {
+      stack: 'helm',
+      version: 1,
+      lines: ['**/charts/*.tgz']
+    }
+  ],
   // `composer.lock` is not here on purpose: a library ignores it, an
   // application commits it. That is a project decision, so it belongs in the
   // free zone rather than in a block the tool re-renders.

@@ -94,6 +94,11 @@ const fingerprints: Record<string, Fingerprint> = {
     source: 'repo',
     patterns: [/\.tf$/, /\.tofu$/, /^\.terraform\.lock\.hcl$/]
   },
+  // Finds a chart at the root or one level down. A chart repository keeping
+  // each chart in `charts/<name>/` sits below `PATTERN_DEPTH` and declares the
+  // stack by hand — deepening the search for it would start finding the charts
+  // other people's examples ship.
+  helm: { source: 'repo', patterns: [/^Chart\.yaml$/] },
   nuxt: { source: 'repo', patterns: [/^nuxt\.config\.[cm]?[jt]s$/] },
   tauri: { source: 'repo', files: ['src-tauri'] },
   // A committed `.env.example` is the marker, not `.env` — the latter is the

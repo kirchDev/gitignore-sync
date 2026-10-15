@@ -1,0 +1,16 @@
+# region gitignore-sync
+# stacks: core, helm
+# ─────────────────────────────────────────
+
+# region core@v1
+.DS_Store
+# endregion
+
+# region helm@v1
+**/charts/*.tgz
+# endregion
+
+# endregion
+
+# Packaged charts
+*.tgz
