@@ -253,7 +253,7 @@ The third surface is for machines without Node: every stable release carries a *
 - **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
 - **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
 - **release-please** with `release-type: node`, `include-v-in-tag: true`. Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
-- **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6`, `github/codeql-action/{init,analyze}@v4`. Keep these pinned to major versions; Dependabot bumps them monthly.
+- **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `github/codeql-action/{init,analyze}@v4` — GitHub's own actions, pinned to major versions. A third-party action is pinned to a commit SHA with its version as a comment (`pnpm/action-setup@<sha> # v6.0.10`), exactly like the `kirchDev/workflows` refs: CodeQL flags a movable tag on one, since its owner can repoint it. Dependabot bumps both forms monthly.
 - **Bitwarden secret ids in workflows are vault references, not credentials.** The actual secret is `BWS_ACCESS_TOKEN`, a GitHub secret that never appears in a workflow file. Each owner authenticates as a different machine account and reads only its own `-ci` mirror, so this repo — a `kirchDev` repo — must carry the `kirchDev` id (`df8b447a-ffd5-4009-9cc3-b49b014f6978`), not `TitusKirch`'s. A mismatched id resolves for nobody, silently, until someone dispatches the workflow.
 
 ## AI & skills
