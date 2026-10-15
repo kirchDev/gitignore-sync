@@ -35,6 +35,21 @@ pnpm add -g @kirchdev/gitignore-sync   # npm i -g / yarn global add / bun add -g
 
 Or run it without installing: `npx @kirchdev/gitignore-sync <command>`. The binary is also available as `gis`.
 
+For a machine with no Node on it, every release also carries a standalone binary with the runtime inside it — `darwin_arm64`, `darwin_x64`, `linux_x64` and `linux_arm64`:
+
+```bash
+VERSION=0.5.0
+NAME="gitignore-sync_${VERSION}_darwin_arm64.tar.gz"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/download/v${VERSION}/${NAME}"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/download/v${VERSION}/${NAME}.sha256"
+shasum -a 256 -c "${NAME}.sha256"
+tar -xzf "${NAME}"
+./gitignore-sync info
+```
+
+> [!NOTE]
+> The archive holds one file and installs nothing: drop it anywhere on your `PATH`, under either name. `gitignore-sync info` reports `single executable` so a downloaded binary is never mistaken for an installed package.
+
 ## 🚀 Quick start
 
 ```bash
