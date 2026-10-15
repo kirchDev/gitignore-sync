@@ -21,3 +21,4 @@ to it.
 | [ADR-0006](/adr/0006-give-each-line-one-stack-and-keep-core-to-ds-store)                    | Give each line one stack, and keep core to .DS_Store                               | accepted | 2026-09-01 |
 | [ADR-0007](/adr/0007-classify-nested-gitignores-before-acting-on-them)                      | Classify nested .gitignore files before acting on them                             | accepted | 2026-09-01 |
 | [ADR-0008](/adr/0008-ship-the-ci-gate-as-a-composite-action)                                | Ship the CI gate as a composite action                                             | accepted | 2026-09-01 |
+| [ADR-0009](/adr/0009-accept-stacks-on-the-word-of-the-tool-that-writes-the-files)           | Accept stacks on the word of the tool that writes the files                        | accepted | 2026-10-15 |

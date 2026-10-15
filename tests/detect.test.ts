@@ -50,6 +50,41 @@ describe('detect', () => {
     expect(names(dir)).toContain('gradle');
   });
 
+  it('fingerprints python from a requirements.txt one level down', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'ansible'));
+    writeFileSync(join(dir, 'ansible', 'requirements.txt'), '');
+    expect(names(dir)).toContain('python');
+  });
+
+  it('does not take a docs build requirements file for python', () => {
+    const dir = fresh();
+    writeFileSync(join(dir, 'package.json'), '{}');
+    mkdirSync(join(dir, 'docs'));
+    writeFileSync(join(dir, 'docs', 'requirements.txt'), '');
+    expect(names(dir)).not.toContain('python');
+  });
+
+  it('fingerprints helm from a chart at the root', () => {
+    const dir = fresh();
+    writeFileSync(join(dir, 'Chart.yaml'), '');
+    expect(names(dir)).toContain('helm');
+  });
+
+  it('fingerprints vite from a config in a frontend subdirectory', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'web'));
+    writeFileSync(join(dir, 'web', 'vite.config.ts'), '');
+    writeFileSync(join(dir, 'web', 'index.html'), '');
+    expect(names(dir)).toContain('vite');
+  });
+
+  it('does not take a library or CLI built with vite for a vite app', () => {
+    const dir = fresh();
+    writeFileSync(join(dir, 'vite.config.ts'), '');
+    expect(names(dir)).not.toContain('vite');
+  });
+
   it('fingerprints dotenv from a committed .env.example', () => {
     const dir = fresh();
     writeFileSync(join(dir, '.env.example'), '');

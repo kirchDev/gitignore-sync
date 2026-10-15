@@ -28,6 +28,10 @@ type Fingerprint = {
   files?: string[];
   /** Or any entry matching one of these, searched to `PATTERN_DEPTH`. */
   patterns?: RegExp[];
+  /** A pattern match only counts with one of these in the same directory. */
+  beside?: string[];
+  /** Directories this stack's patterns never descend into, beyond `SKIP`. */
+  skip?: string[];
   /** Or the platform running the command. */
   platform?: string;
   /** Or `$VISUAL` / `$EDITOR`. */
@@ -83,11 +87,35 @@ const fingerprints: Record<string, Fingerprint> = {
   // Published by `octane:install`, whichever server the repo picks.
   octane: { source: 'repo', files: ['config/octane.php'] },
   go: { source: 'repo', files: ['go.mod'] },
+  // A pattern rather than a file list: an Ansible repo keeps its
+  // `requirements.txt` in `ansible/`, and a monorepo its backend's
+  // `pyproject.toml` one level down. `docs/` is not: Read the Docs, MkDocs and
+  // Sphinx keep their build requirements there, in repos with no Python of
+  // their own.
+  python: {
+    source: 'repo',
+    patterns: [/^(?:pyproject\.toml|requirements\.txt|setup\.py)$/],
+    skip: ['docs']
+  },
   tofu: {
     source: 'repo',
     patterns: [/\.tf$/, /\.tofu$/, /^\.terraform\.lock\.hcl$/]
   },
+  // Finds a chart at the root or one level down. A chart repository keeping
+  // each chart in `charts/<name>/` sits below `PATTERN_DEPTH` and declares the
+  // stack by hand — deepening the search for it would start finding the charts
+  // other people's examples ship.
+  helm: { source: 'repo', patterns: [/^Chart\.yaml$/] },
   nuxt: { source: 'repo', patterns: [/^nuxt\.config\.[cm]?[jt]s$/] },
+  // One level down as well: a Go service keeps its SPA in `web/` or
+  // `frontend/`, which is where the config sits. Only beside an `index.html`,
+  // the entry every Vite app has and a library or CLI built with Vite does
+  // not — there `dist-ssr` and `*.local` would point at nothing.
+  vite: {
+    source: 'repo',
+    patterns: [/^vite\.config\.[cm]?[jt]s$/],
+    beside: ['index.html']
+  },
   tauri: { source: 'repo', files: ['src-tauri'] },
   // A committed `.env.example` is the marker, not `.env` — the latter is the
   // very file the stack exists to keep out, so it is often absent on a fresh
@@ -106,25 +134,27 @@ export const BASE_STACK = 'core';
 
 function matchesPatterns(
   dir: string,
-  patterns: RegExp[],
+  print: Fingerprint,
   depth: number
 ): boolean {
+  const patterns = print.patterns ?? [];
   let entries: Dirent[];
   try {
     entries = readdirSync(dir, { withFileTypes: true });
   } catch {
     return false;
   }
+  const beside =
+    !print.beside || print.beside.some((file) => existsSync(join(dir, file)));
   for (const entry of entries) {
-    if (entry.isDirectory()) continue;
+    if (entry.isDirectory() || !beside) continue;
     if (patterns.some((pattern) => pattern.test(entry.name))) return true;
   }
   if (depth <= 1) return false;
   for (const entry of entries) {
     if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
-    if (SKIP.has(entry.name)) continue;
-    if (matchesPatterns(join(dir, entry.name), patterns, depth - 1))
-      return true;
+    if (SKIP.has(entry.name) || print.skip?.includes(entry.name)) continue;
+    if (matchesPatterns(join(dir, entry.name), print, depth - 1)) return true;
   }
   return false;
 }
@@ -137,8 +167,7 @@ function matches(dir: string, print: Fingerprint): boolean {
     const editor = process.env.VISUAL ?? process.env.EDITOR ?? '';
     if (print.editor.test(editor)) return true;
   }
-  if (print.patterns)
-    return matchesPatterns(dir, print.patterns, PATTERN_DEPTH);
+  if (print.patterns) return matchesPatterns(dir, print, PATTERN_DEPTH);
   return false;
 }
 

@@ -52,6 +52,15 @@ describe('templates', () => {
     }
   });
 
+  // Same reason as the editor directories above: git does not descend into an
+  // ignored directory, so a bare `charts/` would hide every chart in a chart
+  // repository. Only the vendored tarballs may be named.
+  it('ignores the tarballs inside a chart directory, never the directory', () => {
+    const helm = currentTemplate('helm')?.lines ?? [];
+    expect(helm.length).toBeGreaterThan(0);
+    for (const line of helm) expect(line.endsWith('.tgz')).toBe(true);
+  });
+
   it('has no duplicate lines within a block', () => {
     for (const stack of knownStacks()) {
       const lines = currentTemplate(stack)?.lines ?? [];

@@ -30,6 +30,15 @@
     "*.tgz"
   ],
   "go@v1": ["*.exe", "*.test", "*.out", "*.prof"],
+  "python@v1": [
+    "__pycache__/",
+    ".venv/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    ".coverage",
+    "htmlcov/"
+  ],
   "tofu@v1": [
     ".terraform/",
     "*.tfstate",
@@ -43,6 +52,7 @@
     "crash.log",
     "crash.*.log"
   ],
+  "helm@v1": ["**/charts/*.tgz"],
   "php@v1": ["/vendor", "/.phpunit.cache", "/.phpunit.result.cache"],
   "php@v2": [
     "/vendor",
@@ -94,6 +104,7 @@
   ],
   "storybook@v1": ["storybook-static"],
   "nuxt@v1": [".nuxt", ".output", ".nitro", ".data"],
+  "vite@v1": ["dist-ssr", "*.local"],
   "tauri@v1": ["src-tauri/target", "src-tauri/gen/schemas"],
   "dotenv@v1": [
     ".env",
