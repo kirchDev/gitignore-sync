@@ -47,6 +47,64 @@ jobs:
     with:
       tag-name: ${{ needs.release-please.outputs.tag-name }}
 
+  # One job per platform, and it has to be that way: a single executable is the
+  # target platform's own node binary with a blob injected into it, so there is
+  # nothing to cross-compile from. `macos-15-intel` is the Intel label that
+  # replaced the retired `macos-13`.
+  #
+  # Only stable releases get binaries. A prerelease publishes to npm without
+  # cutting a GitHub release, so there would be nothing to attach them to.
+  publish-binaries:
+    name: Attach ${{ matrix.target }}
+    needs: release-please
+    if: needs.release-please.outputs.release-created == 'true'
+    permissions:
+      # `gh release upload` writes into the release release-please just cut.
+      contents: write
+    strategy:
+      # Every platform reports, rather than the first failure hiding the rest.
+      # A missing asset is visible on the release either way.
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runner: macos-latest
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The tag, not the branch tip: the artifact has to carry the version
+          # that was released, and `--version` is inlined at build time.
+          ref: ${{ needs.release-please.outputs.tag-name }}
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # `build` first: it empties `dist` to write the npm artifact, which would
+      # take the binary with it the other way round.
+      - run: pnpm build
+      - run: pnpm sea:build
+
+      - name: Attach the archive and its checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release upload "${{ needs.release-please.outputs.tag-name }}"
+          dist/release/*.tar.gz dist/release/*.tar.gz.sha256
+          --clobber
+
   publish-prerelease:
     name: Publish prerelease
     # Skip the version-bump merges release-please pushes onto main — those are
