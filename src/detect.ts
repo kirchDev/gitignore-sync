@@ -83,6 +83,13 @@ const fingerprints: Record<string, Fingerprint> = {
   // Published by `octane:install`, whichever server the repo picks.
   octane: { source: 'repo', files: ['config/octane.php'] },
   go: { source: 'repo', files: ['go.mod'] },
+  // A pattern rather than a file list: an Ansible repo keeps its
+  // `requirements.txt` in `ansible/`, and a monorepo its backend's
+  // `pyproject.toml` one level down.
+  python: {
+    source: 'repo',
+    patterns: [/^(?:pyproject\.toml|requirements\.txt|setup\.py)$/]
+  },
   tofu: {
     source: 'repo',
     patterns: [/\.tf$/, /\.tofu$/, /^\.terraform\.lock\.hcl$/]

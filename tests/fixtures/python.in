@@ -1,0 +1,17 @@
+# region gitignore-sync
+# stacks: core, python
+# ─────────────────────────────────────────
+
+# endregion
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Ansible installs its collections into the control machine's venv
+ansible/collections/

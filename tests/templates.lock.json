@@ -30,6 +30,15 @@
     "*.tgz"
   ],
   "go@v1": ["*.exe", "*.test", "*.out", "*.prof"],
+  "python@v1": [
+    "__pycache__/",
+    ".venv/",
+    ".pytest_cache/",
+    ".mypy_cache/",
+    ".ruff_cache/",
+    ".coverage",
+    "htmlcov/"
+  ],
   "tofu@v1": [
     ".terraform/",
     "*.tfstate",

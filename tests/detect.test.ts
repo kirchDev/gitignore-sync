@@ -50,6 +50,13 @@ describe('detect', () => {
     expect(names(dir)).toContain('gradle');
   });
 
+  it('fingerprints python from a requirements.txt one level down', () => {
+    const dir = fresh();
+    mkdirSync(join(dir, 'ansible'));
+    writeFileSync(join(dir, 'ansible', 'requirements.txt'), '');
+    expect(names(dir)).toContain('python');
+  });
+
   it('fingerprints dotenv from a committed .env.example', () => {
     const dir = fresh();
     writeFileSync(join(dir, '.env.example'), '');

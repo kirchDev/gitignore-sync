@@ -112,6 +112,33 @@ const registry: Record<string, Template[]> = {
       lines: ['*.exe', '*.test', '*.out', '*.prof']
     }
   ],
+  // The caches Python tooling drops beside the source it just read, plus the
+  // virtualenv. Nothing packaging-related: a wheel is built into `dist/` and a
+  // test run reports into `coverage`, and both of those lines are `node`'s.
+  //
+  // `.venv/` is unanchored because an Ansible repo keeps its control-machine
+  // virtualenv in `ansible/.venv/` rather than at the root. `.coverage` and
+  // `htmlcov/` are coverage.py's data file and its HTML report — distinct
+  // spellings from `coverage`, so neither collides with the `node` block.
+  //
+  // `*.py[cod]` is deliberately absent: CPython has written bytecode into
+  // `__pycache__/` since 3.2 (PEP 3147), so the directory already covers where
+  // it lands and the glob would only reach leftovers from Python 2.
+  python: [
+    {
+      stack: 'python',
+      version: 1,
+      lines: [
+        '__pycache__/',
+        '.venv/',
+        '.pytest_cache/',
+        '.mypy_cache/',
+        '.ruff_cache/',
+        '.coverage',
+        'htmlcov/'
+      ]
+    }
+  ],
   // State and local overrides. `.terraform.lock.hcl` is deliberately **not**
   // ignored — it is meant to be committed. `*.tfvars` usually carries
   // credentials, so it is ignored with the example carved back out.
