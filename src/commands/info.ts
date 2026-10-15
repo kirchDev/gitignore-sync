@@ -85,8 +85,8 @@ function detectBuild(resolved: string | null): Info['build'] {
   // Asked first, because the question the rest of this function answers has no
   // answer here: a single executable is one file holding the runtime, the
   // bundle and the templates, so there is no package.json above it to walk up
-  // to. Without this branch a Homebrew install reports `unknown`, which reads
-  // like a defect rather than the most ordinary install there is.
+  // to. Without this branch a downloaded release binary reports `unknown`,
+  // which reads like a defect rather than an ordinary way to install it.
   if (isSea()) {
     return {
       kind: 'sea',

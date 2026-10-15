@@ -70,15 +70,15 @@ describe('info', () => {
   });
 
   // `isSea()` is false under the test runner by construction, so the branch is
-  // reached by swapping the module rather than by building a 113 MB binary in
-  // the suite. The real artifact is checked by `scripts/sea-build.ts`, which
+  // reached by swapping the module rather than by building a binary the size of
+  // node itself in the suite. The real artifact is checked by `scripts/sea-build.ts`, which
   // runs `--version` out of the binary before packaging it.
   it('calls a single executable its own build, not an unknown one', async () => {
     vi.resetModules();
     vi.doMock('node:sea', () => ({ isSea: () => true }));
     try {
       const { __test: sea } = await import('../src/commands/info.ts');
-      const build = sea.detectBuild('/opt/homebrew/bin/gitignore-sync');
+      const build = sea.detectBuild('/usr/local/bin/gitignore-sync');
       expect(build.kind).toBe('sea');
       expect(build.packageRoot).toBeNull();
     } finally {
