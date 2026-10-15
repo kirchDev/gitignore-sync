@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/kirchDev/gitignore-sync/compare/v0.5.0...v0.6.0) (2026-10-15)
+
+
+### Features
+
+* single executable ([#34](https://github.com/kirchDev/gitignore-sync/issues/34)) ([19f0104](https://github.com/kirchDev/gitignore-sync/commit/19f0104aec239736844c8cd684f0b2d8937978ac))
+* **templates:** add the python, helm and vite stacks ([#32](https://github.com/kirchDev/gitignore-sync/issues/32)) ([1393bb7](https://github.com/kirchDev/gitignore-sync/commit/1393bb7ce31e7d7a5465fecfb14228373b9acdd1))
+
 ## [0.5.0](https://github.com/kirchDev/gitignore-sync/compare/v0.4.0...v0.5.0) (2026-09-16)
 
 
