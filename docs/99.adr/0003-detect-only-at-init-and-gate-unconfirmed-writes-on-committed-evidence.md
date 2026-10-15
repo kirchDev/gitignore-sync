@@ -41,10 +41,11 @@ that then claims it for the whole team.
   new file in the tree changes nothing until someone asks.
 - An interactive `init` can still offer a person's own editor and platform as
   defaults, because a human confirms the proposal.
-- Machine stacks never appear in a header written by CI. A repository that
-  wants them adds them by hand.
-- A stack the repository grows later is only picked up when someone runs
-  `sync --detect` or edits the header.
+- Machine stacks never reach a header that CI writes from detection. A
+  repository that wants them names them explicitly, with `init --stacks=` or
+  `add`, or confirms them in the prompt.
+- A stack the repository grows later is only proposed when someone runs
+  `sync --detect`, and only rendered once someone adds it to the header.
 
 ## Alternatives considered
 

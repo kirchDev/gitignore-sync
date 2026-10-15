@@ -11,9 +11,9 @@ date: 2026-09-01
 
 `gitignore-sync check` is already a complete CI gate: it writes nothing and
 exits non-zero on drift. A GitHub Action around it only has to install Node,
-run the command and surface the result. The sibling `kirchDev/coverage-report`
-action bundles its CLI into `dist/index.js`, which made that shape the obvious
-one to copy.
+run the command and surface the result. When this was decided, the sibling
+`kirchDev/coverage-report` action bundled its CLI into `dist/index.js`, which
+made that shape the obvious one to copy.
 
 ## Decision
 
@@ -33,7 +33,8 @@ summary, nothing more. The version it runs is an input.
 
 ## Alternatives considered
 
-- **A bundled JavaScript action, like `coverage-report`.** Rejected for this
+- **A bundled JavaScript action, as `coverage-report` was.** Rejected for this
   tool: it would ship the CLI twice and leave two artifacts to release in step.
-  Bundling earns its keep in `coverage-report` because that action writes
-  comments and check runs of its own. Here the exit code is the whole result.
+  Bundling earned its keep in `coverage-report` because that action wrote
+  comments and check runs of its own when this was decided. Here the exit code
+  is the whole result.

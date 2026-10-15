@@ -21,17 +21,19 @@ files several times over.
 `src/discover.ts` classifies every `.gitignore` a recursive scan finds into
 one of four kinds:
 
-- **managed** — it carries a `# region gitignore-sync` and is checked by
-  `check --recursive`.
+- **managed** — it carries a `# region gitignore-sync`. It is the only kind
+  checked by `check --recursive`, and `audit --recursive` measures it as
+  well.
 - **keeper** — recognised by its **content**, a `*` plus `!.gitignore`, and
   skipped.
 - **framework** — recognised by its **path**, a directory a framework owns,
   matched at any depth, with content added to the test where a path alone
   would claim a repository's own file. Skipped.
-- **plain** — everything else, and the only kind measured by
-  `audit --recursive`.
+- **plain** — everything else. `audit --recursive` measures it alongside the
+  managed files.
 
-A flag measures the skipped kinds anyway. The scan does not descend into
+`audit --recursive` skips only keepers and framework stubs, and a flag
+measures those anyway. The scan does not descend into
 directories a template ignores by bare name, into directories the repository's
 own `.gitignore` ignores, or into a directory holding its own `.git`.
 

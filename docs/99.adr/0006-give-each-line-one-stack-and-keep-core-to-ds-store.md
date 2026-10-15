@@ -17,7 +17,10 @@ Some stack has to act as the anchor that nearly every repository declares.
 Whatever goes into it is rendered into files that never asked for it, and
 cannot be dropped without dropping the anchor. `core` first shipped with
 `.claude/settings.local.json` alongside `.DS_Store`, which made the anchor
-specific to one tool.
+specific to one tool. That line was removed by editing `core@v1` in place and
+re-locking it, rather than by adding a `core@v2`, a day after the append-only
+rule of [ADR-0005](/adr/0005-version-templates-append-only-behind-a-lock) was
+decided.
 
 ## Decision
 
