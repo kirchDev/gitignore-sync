@@ -35,6 +35,24 @@ pnpm add -g @kirchdev/gitignore-sync   # npm i -g / yarn global add / bun add -g
 
 Or run it without installing: `npx @kirchdev/gitignore-sync <command>`. The binary is also available as `gis`.
 
+For a machine with no Node on it, every release also carries a standalone binary with the runtime inside it, for `darwin_arm64`, `darwin_x64`, `linux_x64` and `linux_arm64`. Download it, verify it, and put it on your `PATH`:
+
+```bash
+NAME="gitignore-sync_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/').tar.gz"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/latest/download/${NAME}"
+curl -fsSLO "https://github.com/kirchDev/gitignore-sync/releases/latest/download/${NAME}.sha256"
+shasum -a 256 -c "${NAME}.sha256"   # or: sha256sum -c
+tar -xzf "${NAME}"
+mkdir -p ~/.local/bin && mv gitignore-sync ~/.local/bin/   # or any directory on your PATH
+gitignore-sync info                 # reports "single executable"
+```
+
+> [!NOTE]
+> The archive holds one file and installs nothing else, so any directory on your `PATH` works, and `gis` works as a name too (`ln -s ~/.local/bin/gitignore-sync ~/.local/bin/gis`). To update, run the same lines again; to uninstall, delete the file. Swap `latest/download` for `download/vX.Y.Z` to pin a release. Windows has no binary; use the npm package there.
+
+> [!TIP]
+> The macOS binaries are signed ad hoc, not notarised. Downloaded with `curl` as above they run as they are; one downloaded in a browser is quarantined first — clear it with `xattr -d com.apple.quarantine gitignore-sync`.
+
 ## 🚀 Quick start
 
 ```bash

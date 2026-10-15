@@ -47,6 +47,19 @@ jobs:
     with:
       tag-name: ${{ needs.release-please.outputs.tag-name }}
 
+  # Only stable releases get binaries. A prerelease publishes to npm without
+  # cutting a GitHub release, so there would be nothing to attach them to. The
+  # build itself lives in `sea.yml`, which pull requests run too.
+  publish-binaries:
+    name: Attach binaries
+    needs: release-please
+    if: needs.release-please.outputs.release-created == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/sea.yml
+    with:
+      tag-name: ${{ needs.release-please.outputs.tag-name }}
+
   publish-prerelease:
     name: Publish prerelease
     # Skip the version-bump merges release-please pushes onto main — those are

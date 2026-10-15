@@ -38,6 +38,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
+    "sea:bundle": "vite build -c vite.sea.config.ts",
+    "sea:build": "pnpm sea:bundle && node scripts/sea-build.ts",
     "link": "pnpm build && pnpm link --global .",
     "unlink": "pnpm uninstall -g @kirchdev/gitignore-sync && git checkout pnpm-workspace.yaml",
     "lint": "oxlint . --deny-warnings",
@@ -73,6 +75,7 @@
     "lint-staged": "^17.6.0",
     "oxfmt": "0.72.0",
     "oxlint": "1.87.0",
+    "postject": "1.0.0-alpha.6",
     "taze": "^21.3.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
