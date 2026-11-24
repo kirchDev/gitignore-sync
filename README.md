@@ -35,7 +35,10 @@ pnpm add -g @kirchdev/gitignore-sync   # npm i -g / yarn global add / bun add -g
 
 Or run it without installing: `npx @kirchdev/gitignore-sync <command>`. The binary is also available as `gis`.
 
-For a machine with no Node on it, every release also carries a standalone binary with the runtime inside it, for `darwin_arm64`, `darwin_x64`, `linux_x64` and `linux_arm64`. Download it, verify it, and put it on your `PATH`:
+<details>
+<summary>Standalone binary — for a machine with no Node on it</summary>
+
+Every release also carries a standalone binary with the runtime inside it, for `darwin_arm64`, `darwin_x64`, `linux_x64` and `linux_arm64`. Download it, verify it, and put it on your `PATH`:
 
 ```bash
 NAME="gitignore-sync_$(uname -s | tr A-Z a-z)_$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/').tar.gz"
@@ -52,6 +55,8 @@ gitignore-sync info                 # reports "single executable"
 
 > [!TIP]
 > The macOS binaries are signed ad hoc, not notarised. Downloaded with `curl` as above they run as they are; one downloaded in a browser is quarantined first — clear it with `xattr -d com.apple.quarantine gitignore-sync`.
+
+</details>
 
 ## 🚀 Quick start
 
@@ -121,6 +126,9 @@ Everything below the closing `# endregion` is the **free zone**: yours, preserve
 
 Curated blocks, each derived from what real repositories actually ignore — or from what the tool writing the files puts in its own scaffold — rather than from a public template site.
 
+<details>
+<summary>Every stack — what it covers and when <code>init</code> proposes it</summary>
+
 | Stack      | What it covers                       | Proposed by `init` when       |
 | :--------- | :----------------------------------- | :---------------------------- |
 | `core`     | `.DS_Store`                          | always                        |
@@ -150,6 +158,8 @@ Curated blocks, each derived from what real repositories actually ignore — or 
 | `windows`  | Thumbs.db, desktop.ini, Recycle Bin  | you are on Windows            |
 | `linux`    | `*~`, trash and NFS droppings        | you are on Linux              |
 
+</details>
+
 `gitignore-sync list` prints this for the binary you have installed, marking the ones your repo declares.
 
 ## ⚙️ Configuration
@@ -163,7 +173,7 @@ There is no config file. The configuration is the `# stacks:` line in the `.giti
 | Nothing                           | Nothing — `sync` is a no-op on a synced file   |
 
 > [!IMPORTANT]
-> Nothing in a repository can tell you what the **other** contributors use — `.vscode/` and `.idea/` are themselves ignored. So those stacks are proposed from your own machine and written down once, rather than re-guessed on every run. Only repository fingerprints reach the non-interactive path; a CI runner's platform must not end up in a committed header.
+> Nothing in a repository can tell you what the **other** contributors use — `.vscode/` and `.idea/` are themselves ignored. So those stacks are proposed from your own machine and written down once, rather than re-guessed on every run.
 
 ## 🧪 Use in CI
 
@@ -190,12 +200,7 @@ There is also an action, for a job summary on failure and a `status` output:
 
 ## 🤝 Contributing
 
-PRs welcome. Conventional Commits required (enforced via commitlint). Husky runs the project's linters/formatters on `git commit`.
-
-> [!TIP]
-> Run `pnpm check:fix` before pushing — CI will catch what husky missed.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
+PRs welcome. Conventional Commits are enforced by commitlint, husky runs the linters and formatters on `git commit`, and `pnpm check:fix` before pushing saves a CI round. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow.
 
 ## 🛣️ Versioning
 
