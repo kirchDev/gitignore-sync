@@ -1,18 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to AI coding agents — Claude Code (claude.ai/code) and vendor-neutral tools such as Codex, OpenCode, Cursor, and Copilot — when working with code in this repository.
-
-## Agent instruction files
-
-`CLAUDE.md` and `AGENTS.md` are kept **byte-identical**. `CLAUDE.md` is what Claude Code reads; `AGENTS.md` is what vendor-neutral agent tools read — Codex, OpenCode, Cursor, Copilot, and whatever follows them. Two real files, deliberately not a symlink: not every tool resolves one.
-
-**After editing either file, copy it over the other — don't repeat the edit by hand:**
-
-```bash
-cp CLAUDE.md AGENTS.md   # or the reverse, whichever you just edited
-```
-
-Retyping a change is exactly how the two drift; one reflowed line or reworded clause is enough. `diff CLAUDE.md AGENTS.md` must print nothing. If it ever does, treat it as a defect and fix it by letting one file win wholesale — never by merging them.
+Guidance for AI coding agents working in this repository.
 
 ## What this repo is
 
@@ -250,7 +238,7 @@ The third surface is for machines without Node: every stable release carries a *
 - **`pnpm link --global .` edits `pnpm-workspace.yaml`**, adding an `overrides:` block pointing at the local checkout. That file is committed, so the block must never be: it would make every clone try to link a package that exists on one machine. `pnpm unlink` reverts it; `pnpm link` is only for trying the CLI locally.
 - **The CLI's `--version` is injected at build time** by vite's `define` from `package.json`'s `version`, which release-please owns. Never hand-copy a version literal.
 - **Runtime deps stay to the sibling handful**: `citty`, `consola`, `pathe`. `c12` and `defu` are deliberately absent — the config lives in the `.gitignore`, so there is no config file to load or merge. `postject`, which injects the single executable's blob, is a dev dependency only: the binary carries nothing of it.
-- **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md`, `CLAUDE.md`, and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
+- **Husky hooks** (`.husky/pre-commit`, `.husky/commit-msg`) run `lint-staged` and `commitlint`. `lint-staged.config.ts` excludes `README.md` and `AGENTS.md` (free-form prose) and `pnpm-lock.yaml`.
 - **Conventional Commits enforced** via `@commitlint/config-conventional`. Don't `--no-verify` unless explicitly asked.
 - **release-please** with `release-type: node`, `include-v-in-tag: true`. Files: `release-please-config.json`, `.release-please-manifest.json`, `.github/workflows/release-please.yml`.
 - **Workflows** use `actions/checkout@v7`, `actions/setup-node@v7`, `github/codeql-action/{init,analyze}@v4` — GitHub's own actions, pinned to major versions. A third-party action is pinned to a commit SHA with its version as a comment (`pnpm/action-setup@<sha> # v6.0.10`), exactly like the `kirchDev/workflows` refs: CodeQL flags a movable tag on one, since its owner can repoint it. Dependabot bumps both forms monthly.
