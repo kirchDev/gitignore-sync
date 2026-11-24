@@ -1,103 +1,49 @@
 # Contributing to gitignore-sync
 
-Thanks for taking the time to contribute! 🛠️ This document covers what you need to get a PR landed.
-
-## Code of Conduct
-
-This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold it.
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Reporting issues
 
-- **Questions & ideas, or something that might be a bug**: start in the [Discord forum](https://discord.kirch.dev/) — that's where the low-friction, unconfirmed stuff lives.
-- **Confirmed bugs**: open a [Bug report](https://github.com/kirchDev/gitignore-sync/issues/new?template=bug_report.yml) with a minimal reproduction if at all possible.
-- **Feature requests**: open a [Feature request](https://github.com/kirchDev/gitignore-sync/issues/new?template=feature_request.yml).
-- **Security vulnerabilities**: **do not** open a public issue. Follow [SECURITY.md](SECURITY.md).
+- **Questions, ideas, possible bugs:** the [Discord forum](https://discord.kirch.dev/).
+- **Confirmed bugs:** a [bug report](https://github.com/kirchDev/gitignore-sync/issues/new?template=bug_report.yml), with a minimal reproduction.
+- **Feature requests:** a [feature request](https://github.com/kirchDev/gitignore-sync/issues/new?template=feature_request.yml).
+- **Security vulnerabilities:** never a public issue — see [SECURITY.md](SECURITY.md).
 
 ## Development setup
 
-Requirements:
-
-- Node **24+** and **pnpm 11**
-- `git`
-
-Clone and install:
+Node **24+**, **pnpm 12** and `git`:
 
 ```bash
 git clone https://github.com/kirchDev/gitignore-sync.git
 cd gitignore-sync
-pnpm install   # wires husky hooks
+pnpm install   # wires the husky hooks
 ```
+
+`pnpm check` is the gate CI runs; `pnpm check:fix` fixes lint and format. Every script is listed in [AGENTS.md](AGENTS.md#commands).
 
 ### Trying the CLI locally
 
-To run your in-development build as the global `gitignore-sync` command:
-
 ```bash
-pnpm setup            # one-time: puts pnpm's global bin on PATH
-source ~/.zshrc       # or open a new shell
-
-pnpm link             # builds, then links this repo globally
-gitignore-sync info   # where it runs from, and what it sees
+pnpm setup            # once: puts pnpm's global bin on PATH
+pnpm link             # builds, then links this work tree globally
+gitignore-sync info   # should print `linked / dev build`
 ```
 
-`gitignore-sync info` answers "which build am I actually running?" — it prints
-`linked / dev build` for a work tree and `installed release` for a package, plus
-the resolved binary path, the shipped stack count and the state of the
-`.gitignore` in the current directory. `--json` for scripts.
-
-Re-running `pnpm build` after a code change updates the binary in place; no
-re-link needed. To undo: `pnpm unlink` — and check that `pnpm-workspace.yaml` is clean afterwards.
+`pnpm build` updates the linked binary in place. `pnpm unlink` undoes the link.
 
 > [!IMPORTANT]
-> `pnpm link --global .` writes an `overrides:` block into `pnpm-workspace.yaml`
-> — a **committed** file. Never commit it: it would make every clone try to link
-> a package that only exists on your machine. `pnpm unlink` removes it again;
-> check `git status` before committing after a link.
-
-> [!NOTE]
-> The link also reinstalls `node_modules` from the lockfile. That is pnpm
-> switching install strategy for a globally registered package — existing work
-> is not lost.
-
-## Running the suite
-
-| Command          | What it does                                                   |
-| :--------------- | :------------------------------------------------------------- |
-| `pnpm lint`      | oxlint across the repo.                                        |
-| `pnpm format`    | oxfmt check across JS / TS / JSON / YAML / MD.                 |
-| `pnpm typecheck` | `tsc --noEmit` over `src`, `tests` and the meta scripts.       |
-| `pnpm test`      | vitest — the pure core, driven by fixture pairs.               |
-| `pnpm build`     | `vite build` → `dist/bin/gitignore-sync.mjs`.                  |
-| `pnpm check`     | Runs `lint`, `format`, `typecheck`, `check:policy` and `test`. |
-| `pnpm check:fix` | Auto-fix lint + format issues.                                 |
-
-The same commands run in CI — keep them green before you push.
+> `pnpm link` writes an `overrides:` block into the committed `pnpm-workspace.yaml`. Never commit it — check `git status` after linking. The link also reinstalls `node_modules`; no work is lost.
 
 ## Branching & PRs
 
-1. **Don't push directly to `main` or `dev`.** Branch off `dev` for every change and open the PR against `dev`; `dev` is rolled up into `main`, and release-please releases from there.
-2. **Conventional Commits required.** Commitlint enforces this on every commit. Examples:
-   - `feat(templates): add the go stack`
-   - `fix(parse): close a section on a nested foreign region`
-   - `docs(readme): clarify what the free zone guarantees`
-   - `chore(deps): bump oxlint to 1.80`
-   - Breaking changes: `feat!: ...` or include `BREAKING CHANGE:` in the body.
-3. **One concern per PR.** Smaller PRs land faster.
-4. **Update relevant docs.** README, CONTRIBUTING, or comments if you change a default.
+1. Branch off `dev` and open the PR against `dev`; never push to `main` or `dev` directly.
+2. Conventional Commits, enforced by commitlint — e.g. `feat(templates): add the go stack`; breaking changes as `feat!:` or a `BREAKING CHANGE:` footer.
+3. One concern per PR, with the docs it affects.
+4. Test `parse`, `render` and `reconcile` with fixture pairs in `tests/fixtures/` (`<name>.in` / `<name>.out`), never with a temporary directory.
 
-> [!IMPORTANT]
-> `parse`, `render` and `reconcile` touch no filesystem. Test them with **fixture pairs** under `tests/fixtures/` (`<name>.in` / `<name>.out`) — adding a pair is enough, `tests/fixtures.test.ts` picks it up and asserts idempotency on top. Don't reach for a temporary directory.
+Husky runs `lint-staged` (oxlint + oxfmt) before a commit and commitlint on its message. If a hook fails, fix it and commit again — never `--no-verify`.
 
-## Style & quality gates
-
-Husky runs the following on `git commit`:
-
-- **JS / JSON / YAML / MD** → `oxlint` + `oxfmt`
-
-If a hook fails, fix the issue and commit again. **Don't `--no-verify`** unless I explicitly ask.
-
-> [!TIP]
-> Run `pnpm check:fix` before opening a PR — saves a CI cycle.
+Agent rules live in [AGENTS.md](AGENTS.md). Claude Code loads it on its own from v2.1.277, as long as no `CLAUDE.md` or `CLAUDE.local.md` sits in the working directory or above.
 
 ## License
 
