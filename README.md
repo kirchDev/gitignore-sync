@@ -6,7 +6,7 @@
 
 [![npm Version](https://img.shields.io/npm/v/@kirchdev/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
 [![Downloads](https://img.shields.io/npm/dm/@kirchdev/gitignore-sync.svg?style=flat-square&color=4f46e5)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
-[![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/gitignore-sync/ci.yml?branch=main&style=flat-square&label=tests)](https://github.com/kirchDev/gitignore-sync/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/kirchDev/gitignore-sync/ci.yml?branch=dev&style=flat-square&label=tests)](https://github.com/kirchDev/gitignore-sync/actions/workflows/ci.yml)
 [![Node Version](https://img.shields.io/node/v/@kirchdev/gitignore-sync.svg?style=flat-square&color=8993be)](https://www.npmjs.com/package/@kirchdev/gitignore-sync)
 [![License: MIT](https://img.shields.io/npm/l/@kirchdev/gitignore-sync.svg?style=flat-square&color=10b981)](LICENSE)
 
@@ -128,7 +128,7 @@ Curated blocks, each derived from what real repositories actually ignore — or 
 | `git`      | merge and backup droppings           | always (it is a git repo)     |
 | `node`     | modules, build output, logs, caches  | `package.json`                |
 | `dotenv`   | `.env*`, minus the committed example | `.env.example` or `.env`      |
-| `php`      | `/vendor`, PHPUnit caches            | `composer.json`               |
+| `php`      | `/vendor`, `auth.json`, PHPUnit and PHPStan caches | `composer.json`               |
 | `laravel`  | build output, storage keys, SSR      | `artisan`                     |
 | `octane`   | the server binaries `octane:install` adds | `config/octane.php`      |
 | `go`       | test and build droppings             | `go.mod`                      |
