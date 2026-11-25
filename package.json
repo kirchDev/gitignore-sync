@@ -51,8 +51,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "templates:lock": "node scripts/templates-lock.ts",
-    "check": "pnpm lint && pnpm format && pnpm typecheck && pnpm check:policy && pnpm test && pnpm build",
+    "check": "pnpm lint && pnpm format && pnpm typecheck && pnpm check:policy && pnpm test && pnpm build && pnpm check:gitignore",
     "check:fix": "pnpm lint:fix && pnpm format:fix",
+    "check:gitignore": "node dist/bin/gitignore-sync.mjs check",
     "check:policy": "node scripts/check-policy-parity.ts",
     "skills:update": "pnpm dlx skills@latest update -p -y",
     "taze": "taze",
@@ -66,23 +67,23 @@
     "pathe": "^2.0.3"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
-    "@commitlint/config-conventional": "^21.2.3",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
     "@commitlint/types": "^21.2.3",
-    "@types/node": "^26.6.5",
-    "@vitest/coverage-v8": "^5.0.3",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.1",
     "husky": "^9.1.7",
-    "lint-staged": "^17.6.0",
-    "oxfmt": "0.72.0",
-    "oxlint": "1.87.0",
+    "lint-staged": "^17.6.1",
+    "oxfmt": "0.79.0",
+    "oxlint": "1.94.0",
     "postject": "1.0.0-alpha.6",
     "taze": "^21.3.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
   },
   "engines": {
     "node": ">=24"
   },
-  "packageManager": "pnpm@12.11.2"
+  "packageManager": "pnpm@12.22.0"
 }

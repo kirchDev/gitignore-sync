@@ -27,3 +27,9 @@ nodeLinker: isolated
 # additionally fetches the pnpm version pinned in package.json's packageManager
 # field, which is the closest match to the old packageManagerStrict: true plus
 # packageManagerStrictVersion: false. Setting pmOnFail here would only weaken that.
+
+# Agent skills that dependencies ship stay off: taze bundles one, but the repo
+# drives taze through its own skills, not through third-party instructions.
+permissions:
+  taze:
+    skills: false

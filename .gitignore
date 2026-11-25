@@ -6,9 +6,10 @@
 .DS_Store
 # endregion
 
-# region agents@v1
+# region agents@v2
 .claude/settings.local.json
 .claude/worktrees/
+.codex/config.toml
 # endregion
 
 # region git@v1
