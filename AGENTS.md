@@ -6,23 +6,24 @@ The settled decisions and their reasons are in [`docs/99.adr/`](docs/99.adr/inde
 
 ## Commands
 
-| Command               | What it does                                                                       |
-| :-------------------- | :--------------------------------------------------------------------------------- |
-| `pnpm install`        | Install deps; `prepare` wires the husky hooks                                      |
-| `pnpm build`          | `vite build` → `dist/bin/gitignore-sync.mjs`                                       |
-| `pnpm dev`            | `vite build --watch`                                                               |
-| `pnpm link`           | Build, then register this work tree as the global command                          |
-| `pnpm test`           | `vitest run`                                                                       |
-| `pnpm lint`           | `oxlint . --deny-warnings`                                                         |
-| `pnpm format`         | `oxfmt --check .` — the **check**, not the fix                                     |
-| `pnpm typecheck`      | `tsc --noEmit`                                                                     |
-| `pnpm check:policy`   | Proves the Claude and Codex policy files ban the same commands                     |
-| `pnpm check`          | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` — the CI gate  |
-| `pnpm check:fix`      | Auto-fix lint + format                                                             |
-| `pnpm templates:lock` | Rewrite `tests/templates.lock.json`                                                |
-| `pnpm sea:build`      | After `pnpm build`: a single executable for this platform → `dist/release/`        |
-| `pnpm skills:update`  | Update project-scoped agent skills via the skills.sh CLI                           |
-| `pnpm taze`           | Interactive dependency upgrade check                                               |
+| Command                | What it does                                                                                          |
+| :--------------------- | :---------------------------------------------------------------------------------------------------- |
+| `pnpm install`         | Install deps; `prepare` wires the husky hooks                                                         |
+| `pnpm build`           | `vite build` → `dist/bin/gitignore-sync.mjs`                                                          |
+| `pnpm dev`             | `vite build --watch`                                                                                  |
+| `pnpm link`            | Build, then register this work tree as the global command                                             |
+| `pnpm test`            | `vitest run`                                                                                          |
+| `pnpm lint`            | `oxlint . --deny-warnings`                                                                            |
+| `pnpm format`          | `oxfmt --check .` — the **check**, not the fix                                                        |
+| `pnpm typecheck`       | `tsc --noEmit`                                                                                        |
+| `pnpm check:policy`    | Proves the Claude and Codex policy files ban the same commands                                        |
+| `pnpm check:gitignore` | After `pnpm build`: the built CLI checks this repo's own `.gitignore`                                 |
+| `pnpm check`           | `lint` + `format` + `typecheck` + `check:policy` + `test` + `build` + `check:gitignore` — the CI gate |
+| `pnpm check:fix`       | Auto-fix lint + format                                                                                |
+| `pnpm templates:lock`  | Rewrite `tests/templates.lock.json`                                                                   |
+| `pnpm sea:build`       | After `pnpm build`: a single executable for this platform → `dist/release/`                           |
+| `pnpm skills:update`   | Update project-scoped agent skills via the skills.sh CLI                                              |
+| `pnpm taze`            | Interactive dependency upgrade check                                                                  |
 
 ## The file format
 
